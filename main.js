@@ -447,7 +447,7 @@ function openSettingsWindow() {
 
   settingsWindow = new BrowserWindow({
     width: 550,
-    height: 650,
+    height: 700,
     resizable: false,
     icon: icon,
     frame: false, // Frameless for a premium styled view
@@ -482,7 +482,7 @@ function openUpdateWindow() {
 
   updateWindow = new BrowserWindow({
     width: 450,
-    height: 550,
+    height: 600,
     resizable: false,
     icon: icon,
     frame: false, // Frameless for a premium styled view
