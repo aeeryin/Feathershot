@@ -314,7 +314,7 @@
     let urls = {
       windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-windows.exe`,
       mac: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-macos-x64.dmg`,
-      linux: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-linux-x64.AppImage`
+      linux: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-linux-x86_64.AppImage`
     };
 
     // Detect browser's operating system
@@ -365,7 +365,7 @@
           // Find Linux (.deb or .AppImage)
           const linuxAsset = data.assets.find(asset => (asset.name.endsWith('.deb') || asset.name.endsWith('.AppImage')) && asset.name.includes('-linux'));
           if (linuxAsset) urls.linux = linuxAsset.browser_download_url;
-          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-linux-x64.AppImage`;
+          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-linux-x86_64.AppImage`;
         }
       } catch (err) {
         console.error('Failed to query release details from GitHub API:', err);

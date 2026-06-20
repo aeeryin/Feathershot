@@ -24,7 +24,7 @@
     "cross-platform",
     "electron"
   ],
-  "author": "Aeeryin",
+  "author": "Aeeryin <aeeryin@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/aeeryin/Feathershot.git"
@@ -91,6 +91,7 @@
       ],
       "icon": "main.png",
       "category": "Utility",
+      "maintainer": "Aeeryin <aeeryin@gmail.com>",
       "artifactName": "Feathershot-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
