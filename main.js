@@ -161,16 +161,24 @@ function generateFileName() {
   return `${name}.${settings.imageFormat}`;
 }
 
-// Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
+// Get display where the mouse cursor is located
+function getActiveDisplay() {
+  const cursorPoint = screen.getCursorScreenPoint();
+  return screen.getDisplayNearestPoint(cursorPoint);
+}
+
 // Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
 function captureScreenViaPowerShell() {
   return new Promise((resolve, reject) => {
     const tmpFile = path.join(os.tmpdir(), `feathershot_${Date.now()}.png`);
     const escapedPath = tmpFile.replace(/\\/g, '\\\\');
 
-    const script = `Add-Type -AssemblyName System.Drawing,System.Windows.Forms; $s=[System.Windows.Forms.Screen]::PrimaryScreen.Bounds; $b=New-Object System.Drawing.Bitmap($s.Width,$s.Height); $g=[System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($s.X,$s.Y,0,0,$s.Size); $b.Save('${escapedPath}',[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();`;
+    const activeDisplay = getActiveDisplay();
+    const { x, y, width, height } = activeDisplay.bounds;
 
-    console.log('[Feathershot] PowerShell: salvando screenshot em', tmpFile);
+    const script = `Add-Type -AssemblyName System.Drawing,System.Windows.Forms; $b=New-Object System.Drawing.Bitmap(${width},${height}); $g=[System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen(${x},${y},0,0,New-Object System.Drawing.Size(${width},${height})); $b.Save('${escapedPath}',[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();`;
+
+    console.log('[Feathershot] PowerShell: salvando screenshot do display ativo em', tmpFile);
     console.log('[Feathershot] PowerShell script:', script);
 
     execFile('powershell', ['-STA', '-NoProfile', '-NonInteractive', '-Command', script], { timeout: 30000 }, (error, stdout, stderr) => {
@@ -199,13 +207,13 @@ function captureScreenViaPowerShell() {
 
 // Screenshot using desktopCapturer (fallback)
 async function captureScreenViaDesktopCapturer() {
-  console.log('[Feathershot] Usando desktopCapturer como fallback...');
+  console.log('[Feathershot] Usando desktopCapturer...');
 
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.bounds;
-  const scaleFactor = primaryDisplay.scaleFactor;
+  const activeDisplay = getActiveDisplay();
+  const { width, height } = activeDisplay.bounds;
+  const scaleFactor = activeDisplay.scaleFactor;
 
-  console.log('[Feathershot] Display:', { width, height, scaleFactor });
+  console.log('[Feathershot] Display ativo:', activeDisplay.id, { width, height, scaleFactor });
 
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
@@ -218,21 +226,46 @@ async function captureScreenViaDesktopCapturer() {
   console.log('[Feathershot] desktopCapturer retornou', sources.length, 'fonte(s)');
 
   if (sources.length > 0) {
-    const thumbnail = sources[0].thumbnail;
+    let source = sources.find(s => s.id === `screen:${activeDisplay.id}`);
+    
+    if (!source) {
+      const displays = screen.getAllDisplays();
+      const index = displays.findIndex(d => d.id === activeDisplay.id);
+      if (index !== -1 && index < sources.length) {
+        source = sources[index];
+      } else {
+        source = sources[0];
+      }
+    }
+    
+    const thumbnail = source.thumbnail;
     console.log('[Feathershot] Thumbnail vazio:', thumbnail.isEmpty(), 'size:', thumbnail.getSize());
     if (!thumbnail.isEmpty()) {
       const url = thumbnail.toDataURL();
       console.log('[Feathershot] toDataURL tamanho:', url.length);
       return url;
     }
+    
     // Fallback: try without DPI scaling
     console.log('[Feathershot] Tentando sem DPI scaling...');
     const fallbackSources = await desktopCapturer.getSources({
       types: ['screen'],
       thumbnailSize: { width, height }
     });
-    if (fallbackSources.length > 0 && !fallbackSources[0].thumbnail.isEmpty()) {
-      const url = fallbackSources[0].thumbnail.toDataURL();
+    
+    let fallbackSource = fallbackSources.find(s => s.id === `screen:${activeDisplay.id}`);
+    if (!fallbackSource) {
+      const displays = screen.getAllDisplays();
+      const index = displays.findIndex(d => d.id === activeDisplay.id);
+      if (index !== -1 && index < fallbackSources.length) {
+        fallbackSource = fallbackSources[index];
+      } else {
+        fallbackSource = fallbackSources[0];
+      }
+    }
+    
+    if (fallbackSource && !fallbackSource.thumbnail.isEmpty()) {
+      const url = fallbackSource.thumbnail.toDataURL();
       console.log('[Feathershot] Fallback toDataURL tamanho:', url.length);
       return url;
     }
@@ -337,8 +370,8 @@ function createCropperWindow(screenshotDataUrl) {
     cropperWindow.close();
   }
   
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { x, y, width, height } = primaryDisplay.bounds;
+  const activeDisplay = getActiveDisplay();
+  const { x, y, width, height } = activeDisplay.bounds;
   
   cropperWindow = new BrowserWindow({
     x,
@@ -392,9 +425,9 @@ function openEditorWindow(dataUrl, width, height) {
   let winWidth = (width || 1000) + sidebarWidth + padding;
   let winHeight = (height || 650) + titlebarHeight + statusbarHeight + padding;
   
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const displayWidth = primaryDisplay.workArea.width;
-  const displayHeight = primaryDisplay.workArea.height;
+  const activeDisplay = getActiveDisplay();
+  const displayWidth = activeDisplay.workArea.width;
+  const displayHeight = activeDisplay.workArea.height;
   
   let maximize = settings.alwaysMaximized || false;
   
@@ -406,10 +439,16 @@ function openEditorWindow(dataUrl, width, height) {
       maximize = true;
     }
   }
+
+  // Center editor on the active screen
+  const winX = activeDisplay.bounds.x + (activeDisplay.bounds.width - winWidth) / 2;
+  const winY = activeDisplay.bounds.y + (activeDisplay.bounds.height - winHeight) / 2;
   
   const icon = nativeImage.createFromPath(APP_ICON_PATH);
   
   editorWindow = new BrowserWindow({
+    x: Math.round(winX),
+    y: Math.round(winY),
     width: Math.round(winWidth),
     height: Math.round(winHeight),
     minWidth: 800,
