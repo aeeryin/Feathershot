@@ -530,60 +530,58 @@ function blockDevTools(win) {
   });
 }
 
+// Send update status to all open windows (settings + update window)
+function broadcastUpdateEvent(channel, data) {
+  BrowserWindow.getAllWindows().forEach(win => {
+    if (!win.isDestroyed()) {
+      win.webContents.send(channel, data);
+    }
+  });
+}
+
 // Auto-Updater Setup
 function setupAutoUpdater() {
-  autoUpdater.autoDownload = true;
+  autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
   
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
     updateVersion = info.version;
-    openUpdateWindow();
+    broadcastUpdateEvent('update-status', {
+      type: 'available',
+      version: info.version
+    });
   });
   
   autoUpdater.on('download-progress', (progressObj) => {
     console.log('Download progress:', progressObj.percent);
-    if (updateWindow && !updateWindow.isDestroyed()) {
-      updateWindow.webContents.send('update-progress', {
-        type: 'progress',
-        percent: progressObj.percent,
-        bytesPerSecond: progressObj.bytesPerSecond,
-        transferred: progressObj.transferred,
-        total: progressObj.total
-      });
-    }
+    broadcastUpdateEvent('update-status', {
+      type: 'progress',
+      percent: progressObj.percent,
+      bytesPerSecond: progressObj.bytesPerSecond,
+      transferred: progressObj.transferred,
+      total: progressObj.total
+    });
   });
 
   autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded:', info.version);
-    if (updateWindow && !updateWindow.isDestroyed()) {
-      updateWindow.webContents.send('update-progress', {
-        type: 'complete',
-        version: info.version
-      });
-    } else {
-      // Fallback
-      dialog.showMessageBox({
-        type: 'info',
-        title: 'Feathershot - Update',
-        message: `Nova versão ${info.version} baixada!`,
-        detail: 'A atualização será instalada automaticamente ao fechar o aplicativo. Deseja reiniciar agora?',
-        buttons: ['Reiniciar Agora', 'Depois'],
-        defaultId: 0
-      }).then((result) => {
-        if (result.response === 0) {
-          autoUpdater.quitAndInstall();
-        }
-      });
-    }
+    broadcastUpdateEvent('update-status', {
+      type: 'downloaded',
+      version: info.version
+    });
   });
   
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err);
+    broadcastUpdateEvent('update-status', {
+      type: 'error',
+      message: err.message
+    });
   });
   
   // Check for updates
-  autoUpdater.checkForUpdatesAndNotify().catch(err => {
+  autoUpdater.checkForUpdates().catch(err => {
     console.log('Update check skipped (dev mode or no internet):', err.message);
   });
 }
@@ -700,7 +698,7 @@ ipcMain.handle('save-to-disk', async (event, dataUrl, defaultName) => {
 
 ipcMain.handle('get-settings', () => {
   const resolvedLanguage = getResolvedLanguage();
-  return { ...settings, resolvedLanguage };
+  return { ...settings, resolvedLanguage, updateVersion: updateVersion || null, appVersion: app.getVersion() };
 });
 
 ipcMain.handle('save-settings', (event, newSettings) => {
@@ -756,6 +754,20 @@ ipcMain.on('update-action', (event, action) => {
   } else if (action === 'later') {
     if (updateWindow) {
       updateWindow.close();
+    }
+  } else if (action === 'download') {
+    autoUpdater.downloadUpdate().catch(err => {
+      console.error('Failed to download update:', err);
+      broadcastUpdateEvent('update-status', {
+        type: 'error',
+        message: err.message
+      });
+    });
+  } else if (action === 'check') {
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdates().catch(err => {
+        console.log('Update check failed:', err.message);
+      });
     }
   }
 });

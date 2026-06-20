@@ -27,5 +27,6 @@ contextBridge.exposeInMainWorld('api', {
 
   // Update APIs
   onUpdateProgress: (callback) => ipcRenderer.on('update-progress', callback),
+  onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
   sendUpdateAction: (action) => ipcRenderer.send('update-action', action)
 });

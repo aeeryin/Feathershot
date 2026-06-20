@@ -22,6 +22,30 @@
   </div>
 
   <div id="settings-container">
+    <!-- Update Banner (hidden by default) -->
+    <div id="update-banner" class="update-banner" style="display: none;">
+      <div class="update-banner-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </div>
+      <div class="update-banner-content">
+        <div class="update-banner-title" id="update-banner-title">Update available</div>
+        <div class="update-banner-desc" id="update-banner-desc">A new version is ready to download.</div>
+        <div class="update-progress-container" id="update-progress-container" style="display: none;">
+          <div class="update-progress-bar">
+            <div class="update-progress-fill" id="update-progress-fill"></div>
+          </div>
+          <span class="update-progress-text" id="update-progress-text">0%</span>
+        </div>
+      </div>
+      <div class="update-banner-actions">
+        <button id="btn-update-action" class="update-btn" onclick="handleUpdateAction()">Download</button>
+      </div>
+    </div>
+
     <!-- Option Card 1: Capture Action -->
     <div class="setting-card">
       <div class="card-title" id="card-default-action-title">Default Action</div>

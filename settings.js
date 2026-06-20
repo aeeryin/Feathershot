@@ -13,6 +13,18 @@ const languageSelect = document.getElementById('language-select');
 const btnSave = document.getElementById('btn-save-settings');
 const btnCancel = document.getElementById('btn-cancel-settings');
 
+// Update banner elements
+const updateBanner = document.getElementById('update-banner');
+const updateBannerTitle = document.getElementById('update-banner-title');
+const updateBannerDesc = document.getElementById('update-banner-desc');
+const updateProgressContainer = document.getElementById('update-progress-container');
+const updateProgressFill = document.getElementById('update-progress-fill');
+const updateProgressText = document.getElementById('update-progress-text');
+const btnUpdateAction = document.getElementById('btn-update-action');
+
+let updateState = 'idle'; // 'idle' | 'available' | 'downloading' | 'downloaded'
+let pendingUpdateVersion = null;
+
 const settingsTranslations = {
   en: {
     'app-title': 'Feathershot Settings',
@@ -138,6 +150,11 @@ async function initSettings() {
   // Populate toggles
   toggleMaximized.checked = currentSettings.alwaysMaximized || false;
   toggleStartup.checked = currentSettings.startWithWindows || false;
+
+  // Show update banner if an update is already known
+  if (currentSettings.updateVersion) {
+    showUpdateBanner('available', currentSettings.updateVersion);
+  }
 }
 
 // Window Controls
@@ -272,6 +289,103 @@ languageSelect.addEventListener('change', () => {
   }
   applyTranslations(lang);
 });
+
+// === Update Banner Logic ===
+const updateTranslations = {
+  en: {
+    available_title: 'Update Available — v{version}',
+    available_desc: 'A new version of Feathershot is available. Click to download.',
+    downloading_title: 'Downloading Update — v{version}',
+    downloading_desc: 'Please wait while the update is being downloaded...',
+    downloaded_title: 'Update Ready — v{version}',
+    downloaded_desc: 'The update has been downloaded. Restart to apply.',
+    btn_download: 'Download',
+    btn_downloading: 'Downloading...',
+    btn_restart: 'Restart Now',
+    current_version: 'Current version: v{version}'
+  },
+  pt: {
+    available_title: 'Atualização Disponível — v{version}',
+    available_desc: 'Uma nova versão do Feathershot está disponível. Clique para baixar.',
+    downloading_title: 'Baixando Atualização — v{version}',
+    downloading_desc: 'Aguarde enquanto a atualização está sendo baixada...',
+    downloaded_title: 'Atualização Pronta — v{version}',
+    downloaded_desc: 'A atualização foi baixada. Reinicie para aplicar.',
+    btn_download: 'Baixar',
+    btn_downloading: 'Baixando...',
+    btn_restart: 'Reiniciar Agora',
+    current_version: 'Versão atual: v{version}'
+  }
+};
+
+function getUpdateLang() {
+  let lang = languageSelect.value;
+  if (lang === 'auto') lang = currentSettings.resolvedLanguage || 'en';
+  return updateTranslations[lang] || updateTranslations.en;
+}
+
+function showUpdateBanner(state, version) {
+  updateState = state;
+  pendingUpdateVersion = version;
+  const t = getUpdateLang();
+
+  updateBanner.style.display = 'flex';
+  updateBanner.classList.remove('downloaded');
+  updateProgressContainer.style.display = 'none';
+  btnUpdateAction.className = 'update-btn';
+
+  if (state === 'available') {
+    updateBannerTitle.textContent = t.available_title.replace('{version}', version);
+    updateBannerDesc.textContent = t.available_desc;
+    btnUpdateAction.textContent = t.btn_download;
+    btnUpdateAction.className = 'update-btn';
+  } else if (state === 'downloading') {
+    updateBannerTitle.textContent = t.downloading_title.replace('{version}', version);
+    updateBannerDesc.textContent = t.downloading_desc;
+    btnUpdateAction.textContent = t.btn_downloading;
+    btnUpdateAction.className = 'update-btn downloading';
+    updateProgressContainer.style.display = 'flex';
+  } else if (state === 'downloaded') {
+    updateBannerTitle.textContent = t.downloaded_title.replace('{version}', version);
+    updateBannerDesc.textContent = t.downloaded_desc;
+    btnUpdateAction.textContent = t.btn_restart;
+    btnUpdateAction.className = 'update-btn restart';
+    updateBanner.classList.add('downloaded');
+    updateProgressContainer.style.display = 'none';
+  }
+}
+
+function handleUpdateAction() {
+  if (updateState === 'available') {
+    showUpdateBanner('downloading', pendingUpdateVersion);
+    window.api.sendUpdateAction('download');
+  } else if (updateState === 'downloaded') {
+    window.api.sendUpdateAction('restart');
+  }
+}
+
+// Listen for real-time update events from main process
+if (window.api.onUpdateStatus) {
+  window.api.onUpdateStatus((data) => {
+    if (data.type === 'available') {
+      showUpdateBanner('available', data.version);
+    } else if (data.type === 'progress') {
+      if (updateState !== 'downloading') {
+        showUpdateBanner('downloading', pendingUpdateVersion);
+      }
+      const percent = Math.round(data.percent);
+      updateProgressFill.style.width = percent + '%';
+      updateProgressText.textContent = percent + '%';
+    } else if (data.type === 'downloaded') {
+      showUpdateBanner('downloaded', data.version);
+    } else if (data.type === 'error') {
+      // On error, allow retry
+      if (pendingUpdateVersion) {
+        showUpdateBanner('available', pendingUpdateVersion);
+      }
+    }
+  });
+}
 
 // Start initialization
 initSettings();
