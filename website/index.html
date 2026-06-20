@@ -42,7 +42,7 @@
       <div class="hero-content">
         <div class="badge">
           <span class="pulse-dot"></span>
-          <span>Version 1.2.1 Released</span>
+          <span id="latest-version-badge">Version 1.2.2 Released</span>
         </div>
         <h1>Light as a feather,<br><span class="gradient-text">powerful</span> as a studio.</h1>
         <p class="hero-desc">
@@ -296,11 +296,8 @@
     const repoName = 'Feathershot';
     
     const primaryBtn = document.getElementById('primary-download-btn');
-    const secondaryBtn = document.getElementById('secondary-download-btn');
     const btnIcon = document.getElementById('btn-icon');
     const btnText = document.getElementById('btn-text');
-    const secondaryBtnIcon = document.getElementById('secondary-btn-icon');
-    const secondaryBtnText = document.getElementById('secondary-btn-text');
     const versionBadge = document.getElementById('latest-version-badge');
 
     // OS Icons
@@ -312,9 +309,9 @@
 
     // Release download URLs
     let urls = {
-      windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-windows.exe`,
-      mac: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-macos.dmg`,
-      linux: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-linux.AppImage`
+      windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.2-windows.exe`,
+      mac: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.2-macos.dmg`,
+      linux: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.2-linux.AppImage`
     };
 
     // Detect browser's operating system
@@ -329,18 +326,20 @@
 
     function setDownloadOS(os) {
       activeOS = os;
-      btnIcon.innerHTML = icons[os];
-      secondaryBtnIcon.innerHTML = icons[os];
+      if (btnIcon) btnIcon.innerHTML = icons[os];
       
       let osLabel = 'Windows';
       if (os === 'mac') osLabel = 'macOS';
       if (os === 'linux') osLabel = 'Linux';
 
-      btnText.textContent = `Download for ${osLabel}`;
-      secondaryBtnText.textContent = `Download for ${osLabel}`;
-      
-      primaryBtn.href = urls[os];
-      secondaryBtn.href = urls[os];
+      if (btnText) btnText.textContent = `Download for ${osLabel}`;
+      if (primaryBtn) primaryBtn.href = urls[os];
+
+      // Update active state in alt links
+      document.getElementById('alt-download-win').classList.toggle('active', os === 'windows');
+      document.getElementById('alt-download-mac').classList.toggle('active', os === 'mac');
+      document.getElementById('alt-download-linux').classList.toggle('active', os === 'linux');
+    }
     async function fetchLatestRelease() {
       try {
         const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/releases`);
