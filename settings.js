@@ -155,6 +155,11 @@ async function initSettings() {
   if (currentSettings.updateVersion) {
     showUpdateBanner('available', currentSettings.updateVersion);
   }
+
+  // Trigger update check when settings window opens
+  if (window.api.sendUpdateAction) {
+    window.api.sendUpdateAction('check');
+  }
 }
 
 // Window Controls

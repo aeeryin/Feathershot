@@ -651,6 +651,15 @@ function setupAutoUpdater() {
   autoUpdater.checkForUpdates().catch(err => {
     console.log('Update check skipped (dev mode or no internet):', err.message);
   });
+
+  // Check for updates periodically in the background (every 2 hours)
+  setInterval(() => {
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdates().catch(err => {
+        console.log('Periodic update check failed:', err.message);
+      });
+    }
+  }, 2 * 60 * 60 * 1000);
 }
 
 // Disable hardware acceleration to fix black screenshots on Windows (Electron + desktopCapturer GPU issue)

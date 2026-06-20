@@ -1,6 +1,6 @@
 {
   "name": "feathershot",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Premium, feature-rich screenshot tool for Windows inspired on Greenshot",
   "main": "main.js",
   "scripts": {
