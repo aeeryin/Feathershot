@@ -48,20 +48,30 @@
         <p class="hero-desc">
           Capture, annotate, and share your screen in milliseconds. Feathershot is a premium, open-source screenshot utility for Windows, engineered for speed and aesthetic excellence.
         </p>
-        <div class="hero-actions">
-          <a href="#" id="primary-download-btn" class="btn btn-primary">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download for Windows
-          </a>
-          <a href="https://github.com/aeeryin/Feathershot" target="_blank" class="btn btn-secondary">
-            View Source Code
-          </a>
+        <div class="hero-actions-container">
+          <div class="hero-actions">
+            <a href="#" id="primary-download-btn" class="btn btn-primary">
+              <span id="btn-icon" style="display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </span>
+              <span id="btn-text">Download for Windows</span>
+            </a>
+            <a href="https://github.com/aeeryin/Feathershot" target="_blank" class="btn btn-secondary">
+              View Source Code
+            </a>
+          </div>
+          <p class="alternative-downloads">
+            Or download for: 
+            <a href="#" id="alt-download-win">Windows</a> • 
+            <a href="#" id="alt-download-mac">macOS</a> • 
+            <a href="#" id="alt-download-linux">Linux</a>
+          </p>
+          <p class="download-info">Free & open-source under the MIT license.</p>
         </div>
-        <p class="download-info">Free & open-source under the MIT license. Supports Windows 10/11.</p>
       </div>
 
       <!-- App Interactive Preview Window -->
@@ -255,12 +265,14 @@
       <p>Clean code, smooth graphics, and absolute speed. Ready to fly?</p>
       <div class="cta-actions">
         <a href="#" id="secondary-download-btn" class="btn btn-primary btn-large">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download Feathershot
+          <span id="secondary-btn-icon" style="display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </span>
+          <span id="secondary-btn-text">Download Feathershot</span>
         </a>
       </div>
       <p class="version-label">Current stable version: <span id="latest-version-badge">v1.2.1</span></p>
@@ -285,10 +297,51 @@
     
     const primaryBtn = document.getElementById('primary-download-btn');
     const secondaryBtn = document.getElementById('secondary-download-btn');
+    const btnIcon = document.getElementById('btn-icon');
+    const btnText = document.getElementById('btn-text');
+    const secondaryBtnIcon = document.getElementById('secondary-btn-icon');
+    const secondaryBtnText = document.getElementById('secondary-btn-text');
     const versionBadge = document.getElementById('latest-version-badge');
 
-    // Default static fallback urls in case api fails
-    let downloadUrl = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1.exe`;
+    // OS Icons
+    const icons = {
+      windows: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.45H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.101zM10.8 1.95L24 0v11.55H10.8V1.95zM10.8 12.45H24v11.55l-13.2-1.95v-9.6z"/></svg>`,
+      mac: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.01 2.96 1.12.09 2.27-.58 2.94-1.39z"/></svg>`,
+      linux: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a5 5 0 0 0-5 5v3.13c0 .87.35 1.7.98 2.31l-1.02 2.04c-.38.76.17 1.62 1.02 1.62h.11c-.55.67-.88 1.48-.88 2.36C7.21 20.35 8.79 22 10.74 22c2.09 0 3.42-1.33 3.86-2.92.3.17.65.29 1.04.29 1.33 0 2.21-1.24 1.79-2.5l-1.39-4.17c.56-.56.91-1.34.91-2.2V7a5 5 0 0 0-5-5zm0 1.5a3.5 3.5 0 0 1 3.5 3.5v2c0 1-.5 2-1.5 2.5-.5.25-1 .5-2 1h-.5a4.34 4.34 0 0 1-2-1c-1-.5-1.5-1.5-1.5-2.5V7a3.5 3.5 0 0 1 3.5-3.5zm-3.5 9c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm7 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z"/></svg>`
+    };
+
+    // Release download URLs
+    let urls = {
+      windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1.exe`,
+      mac: `https://github.com/${repoOwner}/${repoName}/releases`,
+      linux: `https://github.com/${repoOwner}/${repoName}/releases`
+    };
+
+    // Detect browser's operating system
+    function getOS() {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (userAgent.indexOf('mac') !== -1) return 'mac';
+      if (userAgent.indexOf('linux') !== -1) return 'linux';
+      return 'windows';
+    }
+
+    let activeOS = getOS();
+
+    function setDownloadOS(os) {
+      activeOS = os;
+      btnIcon.innerHTML = icons[os];
+      secondaryBtnIcon.innerHTML = icons[os];
+      
+      let osLabel = 'Windows';
+      if (os === 'mac') osLabel = 'macOS';
+      if (os === 'linux') osLabel = 'Linux';
+
+      btnText.textContent = `Download for ${osLabel}`;
+      secondaryBtnText.textContent = `Download for ${osLabel}`;
+      
+      primaryBtn.href = urls[os];
+      secondaryBtn.href = urls[os];
+    }
 
     async function fetchLatestRelease() {
       try {
@@ -298,20 +351,41 @@
           const version = data.tag_name;
           versionBadge.textContent = version;
           
-          // Find the windows executable inside assets
+          // Find Windows (.exe)
           const winAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
-          if (winAsset) {
-            downloadUrl = winAsset.browser_download_url;
-          }
+          if (winAsset) urls.windows = winAsset.browser_download_url;
+          
+          // Find Mac (.dmg or .zip)
+          const macAsset = data.assets.find(asset => asset.name.endsWith('.dmg') || asset.name.endsWith('.zip'));
+          if (macAsset) urls.mac = macAsset.browser_download_url;
+          else urls.mac = `https://github.com/${repoOwner}/${repoName}/releases/tag/${version}`;
+
+          // Find Linux (.deb or .AppImage)
+          const linuxAsset = data.assets.find(asset => asset.name.endsWith('.deb') || asset.name.endsWith('.AppImage'));
+          if (linuxAsset) urls.linux = linuxAsset.browser_download_url;
+          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/tag/${version}`;
         }
       } catch (err) {
-        console.error('Failed to query latest release details from GitHub API:', err);
+        console.error('Failed to query release details from GitHub API:', err);
       } finally {
-        // Assign URLs
-        primaryBtn.href = downloadUrl;
-        secondaryBtn.href = downloadUrl;
+        // Apply detected OS config
+        setDownloadOS(activeOS);
       }
     }
+
+    // Configure alt download links click actions
+    document.getElementById('alt-download-win').addEventListener('click', (e) => {
+      e.preventDefault();
+      setDownloadOS('windows');
+    });
+    document.getElementById('alt-download-mac').addEventListener('click', (e) => {
+      e.preventDefault();
+      setDownloadOS('mac');
+    });
+    document.getElementById('alt-download-linux').addEventListener('click', (e) => {
+      e.preventDefault();
+      setDownloadOS('linux');
+    });
 
     fetchLatestRelease();
   </script>

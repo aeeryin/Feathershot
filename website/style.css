@@ -235,6 +235,32 @@ nav a:hover {
   background: var(--accent-color);
   color: #090a0f;
   box-shadow: 0 4px 20px var(--accent-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Moving shimmer / shine effect */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: shine 3.5s infinite ease-in-out;
+}
+
+@keyframes shine {
+  0% { left: -150%; }
+  35% { left: 150%; }
+  100% { left: 150%; }
 }
 
 .btn-primary:hover {
@@ -263,6 +289,25 @@ nav a:hover {
 .download-info {
   font-size: 12px;
   color: var(--text-mute);
+  margin-top: 16px;
+}
+
+.alternative-downloads {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+
+.alternative-downloads a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+  margin: 0 4px;
+  transition: color 0.2s;
+}
+
+.alternative-downloads a:hover {
+  color: var(--text-main);
 }
 
 /* App Window Mockup Preview */
