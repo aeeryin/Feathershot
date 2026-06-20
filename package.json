@@ -47,6 +47,7 @@
     "mac": {
       "target": ["dmg", "zip"],
       "icon": "main.png",
+      "identity": null,
       "artifactName": "Feathershot-${version}-macos.${ext}"
     },
     "linux": {
