@@ -1,0 +1,53 @@
+{
+  "name": "feathershot",
+  "version": "1.0.0",
+  "description": "Premium, feature-rich screenshot tool for Windows inspired on Greenshot",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "build": "electron-builder --win"
+  },
+  "keywords": [
+    "screenshot",
+    "greenshot",
+    "windows",
+    "electron"
+  ],
+  "author": "Feathershot",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeeryin/Feathershot.git"
+  },
+  "license": "MIT",
+  "build": {
+    "appId": "com.feathershot.app",
+    "productName": "Feathershot",
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "main.png",
+      "artifactName": "feathershot-download.${ext}"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "portable": {
+      "artifactName": "feathershot-download.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.1.0",
+    "electron-builder": "^24.13.3"
+  }
+}
