@@ -70,7 +70,7 @@ function getResolvedLanguage() {
 }
 
 // App Windows
-let cropperWindow = null;
+let cropperWindows = [];
 let editorWindow = null;
 let settingsWindow = null;
 let updateWindow = null;
@@ -168,12 +168,12 @@ function getActiveDisplay() {
 }
 
 // Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
-function captureScreenViaPowerShell() {
+function captureScreenViaPowerShell(activeDisplay) {
   return new Promise((resolve, reject) => {
     const tmpFile = path.join(os.tmpdir(), `feathershot_${Date.now()}.png`);
     const escapedPath = tmpFile.replace(/\\/g, '\\\\');
 
-    const activeDisplay = getActiveDisplay();
+    if (!activeDisplay) activeDisplay = getActiveDisplay();
     const { x, y, width, height } = activeDisplay.bounds;
 
     const script = `Add-Type -AssemblyName System.Drawing,System.Windows.Forms; $b=New-Object System.Drawing.Bitmap(${width},${height}); $g=[System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen(${x},${y},0,0,New-Object System.Drawing.Size(${width},${height})); $b.Save('${escapedPath}',[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();`;
@@ -206,10 +206,10 @@ function captureScreenViaPowerShell() {
 }
 
 // Screenshot using desktopCapturer (fallback)
-async function captureScreenViaDesktopCapturer() {
+async function captureScreenViaDesktopCapturer(activeDisplay) {
   console.log('[Feathershot] Usando desktopCapturer...');
 
-  const activeDisplay = getActiveDisplay();
+  if (!activeDisplay) activeDisplay = getActiveDisplay();
   const { width, height } = activeDisplay.bounds;
   const scaleFactor = activeDisplay.scaleFactor;
 
@@ -274,16 +274,16 @@ async function captureScreenViaDesktopCapturer() {
 }
 
 // Screenshot: try desktopCapturer first (fast, in-process), fallback to PowerShell
-async function captureScreen() {
+async function captureScreen(activeDisplay) {
   console.log('[Feathershot] Iniciando captura de tela...');
   try {
-    const result = await captureScreenViaDesktopCapturer();
+    const result = await captureScreenViaDesktopCapturer(activeDisplay);
     console.log('[Feathershot] Captura via desktopCapturer OK');
     return result;
   } catch (err) {
     console.warn('[Feathershot] desktopCapturer falhou, tentando PowerShell:', err.message);
   }
-  return await captureScreenViaPowerShell();
+  return await captureScreenViaPowerShell(activeDisplay);
 }
 
 // Capture full screen directly without cropping
@@ -322,13 +322,34 @@ async function triggerScreenCapture() {
     // Wait a brief moment for the windows to fully hide
     await new Promise(resolve => setTimeout(resolve, 80));
     
-    const screenshotDataUrl = await captureScreen();
+    // Close any existing croppers first
+    closeAllCroppers();
+
+    const displays = screen.getAllDisplays();
+    const screenshots = await Promise.all(
+      displays.map(async (display) => {
+        try {
+          const url = await captureScreen(display);
+          return { display, url };
+        } catch (err) {
+          console.error(`Failed to capture display ${display.id}:`, err);
+          return null;
+        }
+      })
+    );
+
+    // Filter out failed captures
+    const validScreenshots = screenshots.filter(s => s !== null);
+
+    if (validScreenshots.length === 0) {
+      throw new Error('Could not capture any screen');
+    }
     
     // Restore windows
     if (wasEditorVisible) editorWindow.show();
     if (wasSettingsVisible) settingsWindow.show();
     
-    createCropperWindow(screenshotDataUrl);
+    cropperWindows = validScreenshots.map(({ display, url }) => createCropperWindowForDisplay(display, url));
   } catch (err) {
     console.error('Failed to trigger capture:', err);
     dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
@@ -364,16 +385,11 @@ function handleScreenshotResult(dataUrl, width, height) {
   }
 }
 
-// Cropper Window creation
-function createCropperWindow(screenshotDataUrl) {
-  if (cropperWindow) {
-    cropperWindow.close();
-  }
+// Cropper Window creation for a specific display
+function createCropperWindowForDisplay(display, screenshotDataUrl) {
+  const { x, y, width, height } = display.bounds;
   
-  const activeDisplay = getActiveDisplay();
-  const { x, y, width, height } = activeDisplay.bounds;
-  
-  cropperWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     x,
     y,
     width,
@@ -393,9 +409,9 @@ function createCropperWindow(screenshotDataUrl) {
     }
   });
   
-  const contents = cropperWindow.webContents;
+  const contents = win.webContents;
 
-  cropperWindow.loadFile('cropper.html');
+  win.loadFile('cropper.html');
   
   contents.on('did-finish-load', () => {
     if (!contents.isDestroyed()) {
@@ -403,9 +419,21 @@ function createCropperWindow(screenshotDataUrl) {
     }
   });
   
-  cropperWindow.on('closed', () => {
-    cropperWindow = null;
+  return win;
+}
+
+// Close all active croppers
+function closeAllCroppers() {
+  cropperWindows.forEach(win => {
+    try {
+      if (win && !win.isDestroyed()) {
+        win.close();
+      }
+    } catch (e) {
+      console.error(e);
+    }
   });
+  cropperWindows = [];
 }
 
 // Editor Window creation
@@ -683,16 +711,12 @@ ipcMain.on('window-control', (event, action) => {
 });
 
 ipcMain.on('crop-completed', (event, croppedDataUrl, width, height) => {
-  if (cropperWindow) {
-    cropperWindow.close();
-  }
+  closeAllCroppers();
   handleScreenshotResult(croppedDataUrl, width, height);
 });
 
 ipcMain.on('cancel-crop', () => {
-  if (cropperWindow) {
-    cropperWindow.close();
-  }
+  closeAllCroppers();
 });
 
 ipcMain.on('close-editor', () => {
