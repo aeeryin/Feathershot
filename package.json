@@ -26,7 +26,7 @@
   ],
   "author": {
     "name": "Aeeryin",
-    "email": "aeeryin@gmail.com"
+    "email": "artisticamente.official@gmail.com"
   },
   "repository": {
     "type": "git",
@@ -61,21 +61,19 @@
         {
           "target": "dmg",
           "arch": [
-            "x64",
-            "arm64"
+            "universal"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "x64",
-            "arm64"
+            "universal"
           ]
         }
       ],
       "icon": "main.png",
       "identity": null,
-      "artifactName": "Feathershot-${version}-macos-${arch}.${ext}"
+      "artifactName": "Feathershot-${version}-macos.${ext}"
     },
     "linux": {
       "target": [
@@ -95,7 +93,7 @@
       "icon": "main.png",
       "category": "Utility",
       "maintainer": "Aeeryin <aeeryin@gmail.com>",
-      "artifactName": "Feathershot-${version}-linux-${arch}.${ext}"
+      "artifactName": "Feathershot-${version}-linux.${ext}"
     },
     "nsis": {
       "oneClick": true,
