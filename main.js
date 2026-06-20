@@ -70,7 +70,7 @@ function getResolvedLanguage() {
 }
 
 // App Windows
-let cropperWindows = [];
+let cropperWindow = null;
 let editorWindow = null;
 let settingsWindow = null;
 let updateWindow = null;
@@ -326,11 +326,37 @@ async function triggerScreenCapture() {
     closeAllCroppers();
 
     const displays = screen.getAllDisplays();
+    
+    // Calculate virtual screen bounds (bounding box of all screens)
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+
+    displays.forEach(display => {
+      const { x, y, width, height } = display.bounds;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x + width > maxX) maxX = x + width;
+      if (y + height > maxY) maxY = y + height;
+    });
+
+    const virtualBounds = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY
+    };
+
     const screenshots = await Promise.all(
       displays.map(async (display) => {
         try {
           const url = await captureScreen(display);
-          return { display, url };
+          return {
+            url,
+            x: display.bounds.x - minX,
+            y: display.bounds.y - minY,
+            w: display.bounds.width,
+            h: display.bounds.height
+          };
         } catch (err) {
           console.error(`Failed to capture display ${display.id}:`, err);
           return null;
@@ -349,7 +375,7 @@ async function triggerScreenCapture() {
     if (wasEditorVisible) editorWindow.show();
     if (wasSettingsVisible) settingsWindow.show();
     
-    cropperWindows = validScreenshots.map(({ display, url }) => createCropperWindowForDisplay(display, url));
+    createCropperWindow(virtualBounds, validScreenshots);
   } catch (err) {
     console.error('Failed to trigger capture:', err);
     dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
@@ -385,22 +411,20 @@ function handleScreenshotResult(dataUrl, width, height) {
   }
 }
 
-// Cropper Window creation for a specific display
-function createCropperWindowForDisplay(display, screenshotDataUrl) {
-  const { x, y, width, height } = display.bounds;
-  
-  const win = new BrowserWindow({
-    x,
-    y,
-    width,
-    height,
+// Cropper Window creation for virtual screen bounds
+function createCropperWindow(virtualBounds, screenshots) {
+  cropperWindow = new BrowserWindow({
+    x: virtualBounds.x,
+    y: virtualBounds.y,
+    width: virtualBounds.width,
+    height: virtualBounds.height,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    fullscreen: true,
     resizable: false,
     enableLargerThanScreen: true,
     skipTaskbar: true,
+    hasShadow: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -409,31 +433,31 @@ function createCropperWindowForDisplay(display, screenshotDataUrl) {
     }
   });
   
-  const contents = win.webContents;
+  const contents = cropperWindow.webContents;
 
-  win.loadFile('cropper.html');
+  cropperWindow.loadFile('cropper.html');
   
   contents.on('did-finish-load', () => {
     if (!contents.isDestroyed()) {
-      contents.send('capture-image', screenshotDataUrl, getResolvedLanguage());
+      contents.send('capture-multi-image', screenshots, virtualBounds.width, virtualBounds.height, getResolvedLanguage());
     }
   });
   
-  return win;
+  cropperWindow.on('closed', () => {
+    cropperWindow = null;
+  });
 }
 
-// Close all active croppers
+// Close active cropper
 function closeAllCroppers() {
-  cropperWindows.forEach(win => {
-    try {
-      if (win && !win.isDestroyed()) {
-        win.close();
-      }
-    } catch (e) {
-      console.error(e);
+  try {
+    if (cropperWindow && !cropperWindow.isDestroyed()) {
+      cropperWindow.close();
     }
-  });
-  cropperWindows = [];
+  } catch (e) {
+    console.error(e);
+  }
+  cropperWindow = null;
 }
 
 // Editor Window creation
