@@ -17,11 +17,6 @@ jobs:
   release:
     name: Build & Publish ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
-      (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
-      (matrix.name == 'Linux' && contains(github.ref, '-linux'))
     
     strategy:
       fail-fast: false
@@ -57,13 +52,24 @@ jobs:
           sudo apt-get install -y libarchive-tools
         
       - name: Build & Publish Release
+        if: |
+          github.event_name == 'workflow_dispatch' ||
+          (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
+          (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
+          (matrix.name == 'Linux' && contains(github.ref, '-linux'))
         run: npm run ${{ matrix.script }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
       - name: Upload packaged artifacts
-        if: always()
+        if: |
+          always() && (
+          github.event_name == 'workflow_dispatch' ||
+          (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
+          (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
+          (matrix.name == 'Linux' && contains(github.ref, '-linux'))
+          )
         uses: actions/upload-artifact@v4
         with:
           name: feathershot-${{ matrix.name }}
