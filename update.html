@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feathershot - Update</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #121214;
+      --bg-card: #1c1c21;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #f5f5f7;
+      --text-secondary: #8e8e93;
+      --accent-color: #13BE9E;
+      --accent-glow: rgba(19, 190, 158, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Titlebar */
+    #titlebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      -webkit-app-region: drag;
+      z-index: 100;
+    }
+
+    .update-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px;
+      max-width: 380px;
+      width: 100%;
+    }
+
+    /* Logo Animation */
+    .logo-wrapper {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .logo-wrapper img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 20px var(--accent-glow));
+    }
+
+    .logo-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--accent-color);
+      animation: spin 1.5s linear infinite;
+    }
+
+    .logo-ring-outer {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(19, 190, 158, 0.3);
+      animation: spin 2.5s linear infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Text */
+    .update-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      text-align: center;
+    }
+
+    .update-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.5;
+      margin-top: -12px;
+    }
+
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(19, 190, 158, 0.1);
+      border: 1px solid rgba(19, 190, 158, 0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+
+    .version-tag svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Progress Bar */
+    .progress-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0fa386, #13BE9E, #17d4b0);
+      border-radius: 6px;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+      );
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .progress-status {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-percent {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-color);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Speed/Size info */
+    .download-stats {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Dots animation for waiting state */
+    .dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0% { content: ''; }
+      25% { content: '.'; }
+      50% { content: '..'; }
+      75% { content: '...'; }
+    }
+
+    /* Complete state */
+    .complete .logo-ring,
+    .complete .logo-ring-outer {
+      animation: none;
+      border-color: var(--accent-color);
+      opacity: 0.3;
+    }
+
+    .complete .logo-wrapper img {
+      animation: none;
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 10px 20px;
+      background: var(--accent-color);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: none;
+    }
+
+    .btn-primary:hover {
+      background: #0fa386;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: none;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Particles background */
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particle-float 8s ease-in-out infinite;
+    }
+    
+    @keyframes particle-float {
+      0% { opacity: 0; transform: translateY(100vh) scale(0); }
+      20% { opacity: 0.6; }
+      80% { opacity: 0.2; }
+      100% { opacity: 0; transform: translateY(-20px) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div id="titlebar"></div>
+
+  <!-- Particles background -->
+  <div class="particles" id="particles"></div>
+
+  <div class="update-container" id="update-container">
+    <!-- Logo with spinning ring -->
+    <div class="logo-wrapper">
+      <div class="logo-ring-outer"></div>
+      <div class="logo-ring"></div>
+      <img src="main.png" alt="Feathershot">
+    </div>
+
+    <!-- Title -->
+    <div class="update-title" id="update-title">Atualizando Feathershot</div>
+    <div class="update-subtitle" id="update-subtitle">
+      Baixando a versão mais recente<span class="dots"></span>
+    </div>
+
+    <!-- Version badge -->
+    <div class="version-tag" id="version-tag" style="display: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+      <span id="version-text">v0.0.0</span>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-info">
+        <span class="progress-status" id="progress-status">Preparando download...</span>
+        <span class="progress-percent" id="progress-percent">0%</span>
+      </div>
+    </div>
+
+    <!-- Download stats -->
+    <div class="download-stats" id="download-stats" style="display: none;">
+      <div class="stat-item">
+        <span class="stat-value" id="stat-speed">--</span>
+        <span class="stat-label">Velocidade</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-downloaded">--</span>
+        <span class="stat-label">Baixado</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-total">--</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+
+    <!-- Action buttons (shown after download complete) -->
+    <div class="action-buttons">
+      <button class="btn-primary" id="btn-restart">Reiniciar Agora</button>
+      <button class="btn-secondary" id="btn-later">Depois</button>
+    </div>
+  </div>
+
+  <script>
+    // Create background particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.classList.add('particle');
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 8 + 's';
+      particle.style.animationDuration = (6 + Math.random() * 6) + 's';
+      particle.style.width = (1 + Math.random() * 2) + 'px';
+      particle.style.height = particle.style.width;
+      particlesContainer.appendChild(particle);
+    }
+
+    // Elements
+    const progressFill = document.getElementById('progress-fill');
+    const progressStatus = document.getElementById('progress-status');
+    const progressPercent = document.getElementById('progress-percent');
+    const updateTitle = document.getElementById('update-title');
+    const updateSubtitle = document.getElementById('update-subtitle');
+    const versionTag = document.getElementById('version-tag');
+    const versionText = document.getElementById('version-text');
+    const downloadStats = document.getElementById('download-stats');
+    const statSpeed = document.getElementById('stat-speed');
+    const statDownloaded = document.getElementById('stat-downloaded');
+    const statTotal = document.getElementById('stat-total');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnLater = document.getElementById('btn-later');
+    const container = document.getElementById('update-container');
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Listen for update events from main process
+    window.api.onUpdateProgress((event, data) => {
+      if (data.type === 'version') {
+        versionTag.style.display = 'inline-flex';
+        versionText.textContent = 'v' + data.version;
+      }
+
+      if (data.type === 'progress') {
+        const percent = Math.round(data.percent);
+        progressFill.style.width = percent + '%';
+        progressPercent.textContent = percent + '%';
+        progressStatus.textContent = 'Baixando atualização...';
+        downloadStats.style.display = 'flex';
+
+        if (data.bytesPerSecond) {
+          statSpeed.textContent = formatBytes(data.bytesPerSecond) + '/s';
+        }
+        if (data.transferred) {
+          statDownloaded.textContent = formatBytes(data.transferred);
+        }
+        if (data.total) {
+          statTotal.textContent = formatBytes(data.total);
+        }
+      }
+
+      if (data.type === 'complete') {
+        container.classList.add('complete');
+        progressFill.style.width = '100%';
+        progressPercent.textContent = '100%';
+        progressStatus.textContent = 'Download concluído!';
+        updateTitle.textContent = 'Atualização Pronta!';
+        updateSubtitle.innerHTML = 'A nova versão foi baixada com sucesso. Reinicie para aplicar.';
+        btnRestart.style.display = 'block';
+        btnLater.style.display = 'block';
+      }
+    });
+
+    btnRestart.addEventListener('click', () => {
+      window.api.sendUpdateAction('restart');
+    });
+
+    btnLater.addEventListener('click', () => {
+      window.api.sendUpdateAction('later');
+    });
+  </script>
+</body>
+</html>

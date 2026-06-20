@@ -23,5 +23,9 @@ contextBridge.exposeInMainWorld('api', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   selectFolder: () => ipcRenderer.invoke('select-folder'),
-  onSettingsChanged: (callback) => ipcRenderer.on('settings-changed', (event, settings) => callback(settings))
+  onSettingsChanged: (callback) => ipcRenderer.on('settings-changed', (event, settings) => callback(settings)),
+
+  // Update APIs
+  onUpdateProgress: (callback) => ipcRenderer.on('update-progress', callback),
+  sendUpdateAction: (action) => ipcRenderer.send('update-action', action)
 });

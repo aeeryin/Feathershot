@@ -1,6 +1,7 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, clipboard, nativeImage, dialog, screen, Tray, Menu, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { autoUpdater } = require('electron-updater');
 
 // Default Settings
 const DEFAULT_SETTINGS = {
@@ -246,7 +247,8 @@ function createCropperWindow(screenshotDataUrl) {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      devTools: false
     }
   });
   
@@ -307,7 +309,8 @@ function openEditorWindow(dataUrl, width, height) {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      devTools: false
     }
   });
   
@@ -340,7 +343,8 @@ function openSettingsWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      devTools: false
     }
   });
   
@@ -355,6 +359,57 @@ function openSettingsWindow() {
   });
 }
 
+// Block DevTools keyboard shortcuts globally
+function blockDevTools(win) {
+  win.webContents.on('before-input-event', (event, input) => {
+    // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (input.key === 'F12') {
+      event.preventDefault();
+    }
+    if (input.control && input.shift && (input.key === 'I' || input.key === 'i' || input.key === 'J' || input.key === 'j' || input.key === 'C' || input.key === 'c')) {
+      event.preventDefault();
+    }
+  });
+}
+
+// Auto-Updater Setup
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+  });
+  
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded:', info.version);
+    // Show notification to user
+    const allWindows = BrowserWindow.getAllWindows();
+    const parentWin = allWindows.length > 0 ? allWindows[0] : null;
+    dialog.showMessageBox(parentWin, {
+      type: 'info',
+      title: 'Feathershot - Update',
+      message: `Nova versão ${info.version} baixada!`,
+      detail: 'A atualização será instalada automaticamente ao fechar o aplicativo. Deseja reiniciar agora?',
+      buttons: ['Reiniciar Agora', 'Depois'],
+      defaultId: 0
+    }).then((result) => {
+      if (result.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
+  });
+  
+  autoUpdater.on('error', (err) => {
+    console.error('Auto-updater error:', err);
+  });
+  
+  // Check for updates
+  autoUpdater.checkForUpdatesAndNotify().catch(err => {
+    console.log('Update check skipped (dev mode or no internet):', err.message);
+  });
+}
+
 // Electron Application Lifecycle
 app.whenReady().then(() => {
   loadSettings();
@@ -362,12 +417,21 @@ app.whenReady().then(() => {
   registerShortcuts();
   openSettingsWindow();
   
+  // Setup auto-updater (only works in packaged app)
+  if (app.isPackaged) {
+    setupAutoUpdater();
+  }
+  
   // Disable hardware acceleration warning / configure window events
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      // Show tray/shortcuts instructions or open settings
       openSettingsWindow();
     }
+  });
+  
+  // Block devtools on all new windows
+  app.on('browser-window-created', (event, win) => {
+    blockDevTools(win);
   });
 });
 
