@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Feathershot - Premium Screenshot Tool for Windows</title>
+  <title>Feathershot - Premium Screenshot Tool for Windows, macOS and Linux</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <!-- Favicon -->
@@ -46,7 +46,7 @@
         </div>
         <h1>Light as a feather,<br><span class="gradient-text">powerful</span> as a studio.</h1>
         <p class="hero-desc">
-          Capture, annotate, and share your screen in milliseconds. Feathershot is a premium, open-source screenshot utility for Windows, engineered for speed and aesthetic excellence.
+          Capture, annotate, and share your screen in milliseconds. Feathershot is a premium, open-source screenshot utility for Windows, macOS and Linux, engineered for speed and aesthetic excellence.
         </p>
         <div class="hero-actions-container">
           <div class="hero-actions">
@@ -66,8 +66,8 @@
           </div>
           <p class="alternative-downloads">
             Or download for: 
-            <a href="#" id="alt-download-win">Windows</a> • 
-            <a href="#" id="alt-download-mac">macOS</a> • 
+            <a href="#" id="alt-download-win">Windows</a> | 
+            <a href="#" id="alt-download-mac">macOS</a> | 
             <a href="#" id="alt-download-linux">Linux</a>
           </p>
           <p class="download-info">Free & open-source under the MIT license.</p>
@@ -198,7 +198,7 @@
             </div>
             <div class="editor-mock-preview">
               <span class="crop-overlay-label">Drag and Drop Support</span>
-              <p class="desc-pill">Drag photos directly from Windows Explorer into the editor</p>
+              <p class="desc-pill">Drag images directly from your file manager into the editor</p>
             </div>
           </div>
         </div>
@@ -313,8 +313,8 @@
     // Release download URLs
     let urls = {
       windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-windows.exe`,
-      mac: `https://github.com/${repoOwner}/${repoName}/releases`,
-      linux: `https://github.com/${repoOwner}/${repoName}/releases`
+      mac: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-macos-x64.dmg`,
+      linux: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-linux-x64.AppImage`
     };
 
     // Detect browser's operating system
@@ -360,12 +360,12 @@
           // Find Mac (.dmg or .zip)
           const macAsset = data.assets.find(asset => (asset.name.endsWith('.dmg') || asset.name.endsWith('.zip')) && asset.name.includes('-macos'));
           if (macAsset) urls.mac = macAsset.browser_download_url;
-          else urls.mac = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-macos.dmg`;
+          else urls.mac = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-macos-x64.dmg`;
 
           // Find Linux (.deb or .AppImage)
           const linuxAsset = data.assets.find(asset => (asset.name.endsWith('.deb') || asset.name.endsWith('.AppImage')) && asset.name.includes('-linux'));
           if (linuxAsset) urls.linux = linuxAsset.browser_download_url;
-          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-linux.AppImage`;
+          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-linux-x64.AppImage`;
         }
       } catch (err) {
         console.error('Failed to query release details from GitHub API:', err);
@@ -389,6 +389,7 @@
       setDownloadOS('linux');
     });
 
+    setDownloadOS(activeOS);
     fetchLatestRelease();
   </script>
 </body>

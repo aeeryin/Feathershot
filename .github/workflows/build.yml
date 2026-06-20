@@ -9,14 +9,28 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref_name || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   release:
-    name: Build & Publish Multi-Platform
+    name: Build & Publish ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     
     strategy:
+      fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - name: Windows
+            os: windows-latest
+            script: publish:win
+          - name: macOS
+            os: macos-latest
+            script: publish:mac
+          - name: Linux
+            os: ubuntu-latest
+            script: publish:linux
         
     steps:
       - name: Checkout repository
@@ -30,18 +44,30 @@ jobs:
           
       - name: Install dependencies
         run: npm ci
+
+      - name: Install Linux packaging dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive-tools
         
       - name: Build & Publish Release
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            npx electron-builder --win --publish always
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            # Bypass macOS code signing error by setting CSC_IDENTITY_AUTO_DISCOVERY=false
-            export CSC_IDENTITY_AUTO_DISCOVERY=false
-            npx electron-builder --mac --publish always
-          else
-            npx electron-builder --linux --publish always
-          fi
-        shell: bash
+        run: npm run ${{ matrix.script }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload packaged artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feathershot-${{ matrix.name }}
+          if-no-files-found: ignore
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/latest*.yml
+            dist/*.blockmap

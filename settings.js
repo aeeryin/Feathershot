@@ -50,9 +50,10 @@ const settingsTranslations = {
     'toggle-maximized-title': 'Always open editor maximized',
     'toggle-maximized-desc': 'The editor window will always open in fullscreen mode, regardless of the image size.',
     'card-startup-title': 'Startup',
-    'card-startup-desc': 'Control whether the application launches automatically when Windows starts.',
-    'toggle-startup-title': 'Start with Windows',
-    'toggle-startup-desc': 'Feathershot will run in the system tray automatically when you log into Windows.',
+    'card-startup-desc': 'Control whether the application launches automatically when you sign in.',
+    'toggle-startup-title': 'Start with system',
+    'toggle-startup-desc': 'Feathershot will run in the system tray automatically when you sign in.',
+    'toggle-startup-unsupported-desc': 'Auto-launch must be configured through your Linux desktop environment.',
     'card-storage-title': 'Storage & Naming',
     'card-storage-desc': 'Setup where screenshots are saved and how files are named.',
     'label-save-folder': 'Save Folder Path',
@@ -89,9 +90,10 @@ const settingsTranslations = {
     'toggle-maximized-title': 'Sempre abrir o editor maximizado',
     'toggle-maximized-desc': 'A janela do editor sempre abrirá maximizada, independentemente do tamanho da imagem.',
     'card-startup-title': 'Inicialização',
-    'card-startup-desc': 'Controle se o aplicativo inicia automaticamente quando o Windows é ligado.',
-    'toggle-startup-title': 'Iniciar com o Windows',
-    'toggle-startup-desc': 'O Feathershot será executado na bandeja do sistema automaticamente ao fazer login no Windows.',
+    'card-startup-desc': 'Controle se o aplicativo inicia automaticamente ao fazer login.',
+    'toggle-startup-title': 'Iniciar com o sistema',
+    'toggle-startup-desc': 'O Feathershot será executado na bandeja do sistema automaticamente ao fazer login.',
+    'toggle-startup-unsupported-desc': 'No Linux, configure a inicialização automática pelo seu ambiente gráfico.',
     'card-storage-title': 'Armazenamento e Nomeação',
     'card-storage-desc': 'Configure onde as capturas de tela serão salvas e como os arquivos serão nomeados.',
     'label-save-folder': 'Caminho da Pasta de Salvamento',
@@ -114,6 +116,13 @@ function applyTranslations(lang) {
       el.textContent = t[id];
     }
   });
+
+  if (currentSettings.supportsAutoLaunch === false) {
+    const startupDesc = document.getElementById('toggle-startup-desc');
+    if (startupDesc && t['toggle-startup-unsupported-desc']) {
+      startupDesc.textContent = t['toggle-startup-unsupported-desc'];
+    }
+  }
 
   if (lang === 'pt') {
     hotkeyInput.placeholder = 'Pressione as teclas...';
@@ -149,7 +158,16 @@ async function initSettings() {
   
   // Populate toggles
   toggleMaximized.checked = currentSettings.alwaysMaximized || false;
-  toggleStartup.checked = currentSettings.startWithWindows || false;
+  toggleStartup.checked = currentSettings.startAtLogin || currentSettings.startWithWindows || false;
+  if (currentSettings.supportsAutoLaunch === false) {
+    toggleStartup.checked = false;
+    toggleStartup.disabled = true;
+    const startupDesc = document.getElementById('toggle-startup-desc');
+    const t = settingsTranslations[currentSettings.resolvedLanguage || 'en'] || settingsTranslations.en;
+    if (startupDesc && t['toggle-startup-unsupported-desc']) {
+      startupDesc.textContent = t['toggle-startup-unsupported-desc'];
+    }
+  }
 
   // Show update banner if an update is already known
   if (currentSettings.updateVersion) {
@@ -224,7 +242,7 @@ window.addEventListener('keydown', (e) => {
   }
   
   const keys = [];
-  if (e.ctrlKey) keys.push('Ctrl');
+  if (e.ctrlKey || e.metaKey) keys.push('CommandOrControl');
   if (e.shiftKey) keys.push('Shift');
   if (e.altKey) keys.push('Alt');
   
@@ -251,7 +269,7 @@ window.addEventListener('keydown', (e) => {
   else if (keyName.length === 1) baseKey = keyName.toUpperCase();
   
   // Allow PrintScreen as standalone key, or any special key, or modified key
-  const hasModifier = e.ctrlKey || e.shiftKey || e.altKey;
+  const hasModifier = e.ctrlKey || e.shiftKey || e.altKey || e.metaKey;
   const isSpecialKey = baseKey.length > 1;
   if (!hasModifier && !isSpecialKey) {
     return; // Ignore single letter keys without modifiers
@@ -278,7 +296,7 @@ btnSave.addEventListener('click', async () => {
     fileNamePattern: filenamePatternInput.value,
     imageFormat: formatSelect.value,
     alwaysMaximized: toggleMaximized.checked,
-    startWithWindows: toggleStartup.checked,
+    startAtLogin: toggleStartup.checked,
     language: languageSelect.value
   };
   

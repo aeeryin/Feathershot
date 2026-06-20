@@ -1,18 +1,27 @@
 {
   "name": "feathershot",
   "version": "1.2.1",
-  "description": "Premium, feature-rich screenshot tool for Windows inspired on Greenshot",
+  "description": "Premium, feature-rich cross-platform screenshot tool inspired by Greenshot",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --linux --publish never",
-    "build": "electron-builder --win --linux --publish never",
-    "publish": "electron-builder --win --linux --publish always"
+    "dist": "electron-builder --publish never",
+    "build": "electron-builder --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:linux": "electron-builder --linux --publish never",
+    "publish": "electron-builder --publish always",
+    "publish:win": "electron-builder --win --publish always",
+    "publish:mac": "electron-builder --mac --publish always",
+    "publish:linux": "electron-builder --linux --publish always"
   },
   "keywords": [
     "screenshot",
     "greenshot",
     "windows",
+    "macos",
+    "linux",
+    "cross-platform",
     "electron"
   ],
   "author": "Aeeryin",
@@ -45,15 +54,44 @@
       "artifactName": "Feathershot-${version}-windows.${ext}"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "icon": "main.png",
       "identity": null,
-      "artifactName": "Feathershot-${version}-macos.${ext}"
+      "artifactName": "Feathershot-${version}-macos-${arch}.${ext}"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "main.png",
-      "artifactName": "Feathershot-${version}-linux.${ext}"
+      "category": "Utility",
+      "artifactName": "Feathershot-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": true,
@@ -64,7 +102,15 @@
     },
     "files": [
       "**/*",
-      "!node_modules/.cache/**"
+      "!node_modules/.cache/**",
+      "!dist/**",
+      "!out/**",
+      "!release/**",
+      "!build/**",
+      "!.github/**",
+      "!.git/**",
+      "!website/**",
+      "!*.log"
     ],
     "directories": {
       "output": "dist"

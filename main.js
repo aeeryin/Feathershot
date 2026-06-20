@@ -5,15 +5,20 @@ const os = require('os');
 const { execFile } = require('child_process');
 const { autoUpdater } = require('electron-updater');
 
+const IS_WINDOWS = process.platform === 'win32';
+const IS_MACOS = process.platform === 'darwin';
+const SUPPORTS_LOGIN_ITEMS = IS_WINDOWS || IS_MACOS;
+const DEFAULT_SHORTCUT = 'CommandOrControl+Shift+S';
+
 // Default Settings
 const DEFAULT_SETTINGS = {
-  shortcut: 'Ctrl+Shift+S',
+  shortcut: DEFAULT_SHORTCUT,
   defaultAction: 'editor', // 'editor' | 'clipboard' | 'save'
   saveFolder: path.join(app.getPath('pictures'), 'Feathershot'),
   imageFormat: 'png', // 'png' | 'jpeg'
   fileNamePattern: 'Screenshot_{yyyy}-{mm}-{dd}_{hh}-{mm}-{ss}',
   alwaysMaximized: false,
-  startWithWindows: false,
+  startAtLogin: false,
   language: 'auto' // 'auto' | 'en' | 'pt'
 };
 
@@ -25,7 +30,12 @@ function loadSettings() {
   try {
     if (fs.existsSync(settingsPath)) {
       const data = fs.readFileSync(settingsPath, 'utf8');
-      settings = { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+      const storedSettings = JSON.parse(data);
+      if (storedSettings.startAtLogin === undefined && storedSettings.startWithWindows !== undefined) {
+        storedSettings.startAtLogin = storedSettings.startWithWindows;
+      }
+      delete storedSettings.startWithWindows;
+      settings = { ...DEFAULT_SETTINGS, ...storedSettings };
     } else {
       saveSettings(settings);
     }
@@ -34,18 +44,40 @@ function loadSettings() {
   }
 }
 
-// Apply auto-launch (start with Windows) setting
+function normalizeSettings(newSettings) {
+  const normalized = { ...newSettings };
+  if (normalized.startAtLogin === undefined && normalized.startWithWindows !== undefined) {
+    normalized.startAtLogin = normalized.startWithWindows;
+  }
+  delete normalized.startWithWindows;
+  return normalized;
+}
+
+// Apply auto-launch where Electron supports login items.
 function applyAutoLaunch() {
-  app.setLoginItemSettings({
-    openAtLogin: settings.startWithWindows || false,
-    path: app.getPath('exe')
-  });
+  if (!SUPPORTS_LOGIN_ITEMS) {
+    return;
+  }
+
+  try {
+    const loginSettings = {
+      openAtLogin: settings.startAtLogin || false
+    };
+
+    if (IS_WINDOWS) {
+      loginSettings.path = app.getPath('exe');
+    }
+
+    app.setLoginItemSettings(loginSettings);
+  } catch (err) {
+    console.warn('Failed to apply login item settings:', err.message);
+  }
 }
 
 // Save Settings
 function saveSettings(newSettings) {
   try {
-    settings = { ...settings, ...newSettings };
+    settings = { ...settings, ...normalizeSettings(newSettings) };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
     
     // Apply auto-launch setting
@@ -82,36 +114,40 @@ const APP_ICON_PATH = path.join(__dirname, 'main.png');
 
 // Create system tray
 function createTray() {
-  const icon = nativeImage.createFromPath(APP_ICON_PATH);
-  tray = new Tray(icon);
-  tray.setToolTip('Feathershot');
-  
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Capture Region', click: () => triggerScreenCapture() },
-    { label: 'Capture Fullscreen', click: () => captureFullscreenDirectly() },
-    { type: 'separator' },
-    { label: 'Check for Updates', click: () => {
-      if (app.isPackaged) {
-        autoUpdater.checkForUpdatesAndNotify().catch(err => {
-          dialog.showErrorBox('Update Check Failed', err.message);
-        });
-      } else {
-        dialog.showMessageBox({
-          type: 'info',
-          title: 'Feathershot',
-          message: 'Auto-update is only active in the packaged/production application.'
-        });
-      }
-    }},
-    { label: 'Settings', click: () => openSettingsWindow() },
-    { type: 'separator' },
-    { label: 'Quit', click: () => app.quit() }
-  ]);
-  
-  tray.setContextMenu(contextMenu);
-  tray.on('double-click', () => {
-    triggerScreenCapture();
-  });
+  try {
+    const icon = nativeImage.createFromPath(APP_ICON_PATH);
+    tray = new Tray(icon);
+    tray.setToolTip('Feathershot');
+    
+    const contextMenu = Menu.buildFromTemplate([
+      { label: 'Capture Region', click: () => triggerScreenCapture() },
+      { label: 'Capture Fullscreen', click: () => captureFullscreenDirectly() },
+      { type: 'separator' },
+      { label: 'Check for Updates', click: () => {
+        if (app.isPackaged) {
+          autoUpdater.checkForUpdatesAndNotify().catch(err => {
+            dialog.showErrorBox('Update Check Failed', err.message);
+          });
+        } else {
+          dialog.showMessageBox({
+            type: 'info',
+            title: 'Feathershot',
+            message: 'Auto-update is only active in the packaged/production application.'
+          });
+        }
+      }},
+      { label: 'Settings', click: () => openSettingsWindow() },
+      { type: 'separator' },
+      { label: 'Quit', click: () => app.quit() }
+    ]);
+    
+    tray.setContextMenu(contextMenu);
+    tray.on('double-click', () => {
+      triggerScreenCapture();
+    });
+  } catch (err) {
+    console.error('Failed to create system tray:', err);
+  }
 }
 
 // Global hotkeys register
@@ -119,7 +155,7 @@ function registerShortcuts() {
   globalShortcut.unregisterAll();
   
   // Register screen capture shortcut
-  let shortcutString = settings.shortcut;
+  let shortcutString = settings.shortcut || DEFAULT_SHORTCUT;
   if (shortcutString === 'PrintScreen') {
     shortcutString = 'PrintScreen';
   }
@@ -273,7 +309,7 @@ async function captureScreenViaDesktopCapturer(activeDisplay) {
   throw new Error('desktopCapturer returned no valid screen source');
 }
 
-// Screenshot: try desktopCapturer first (fast, in-process), fallback to PowerShell
+// Screenshot: try desktopCapturer first (fast, in-process), fallback to PowerShell on Windows.
 async function captureScreen(activeDisplay) {
   console.log('[Feathershot] Iniciando captura de tela...');
   try {
@@ -281,9 +317,16 @@ async function captureScreen(activeDisplay) {
     console.log('[Feathershot] Captura via desktopCapturer OK');
     return result;
   } catch (err) {
-    console.warn('[Feathershot] desktopCapturer falhou, tentando PowerShell:', err.message);
+    if (IS_WINDOWS) {
+      console.warn('[Feathershot] desktopCapturer falhou, tentando PowerShell:', err.message);
+      return await captureScreenViaPowerShell(activeDisplay);
+    }
+
+    const platformHint = IS_MACOS
+      ? 'On macOS, grant Screen Recording permission to Feathershot in System Settings.'
+      : 'On Linux, make sure the desktop session allows screen capture through X11 or the active portal.';
+    throw new Error(`${platformHint}\n\nOriginal error: ${err.message}`);
   }
-  return await captureScreenViaPowerShell(activeDisplay);
 }
 
 // Capture full screen directly without cropping
@@ -662,9 +705,11 @@ function setupAutoUpdater() {
   }, 2 * 60 * 60 * 1000);
 }
 
-// Disable hardware acceleration to fix black screenshots on Windows (Electron + desktopCapturer GPU issue)
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('disable-gpu');
+// Disable hardware acceleration only on Windows to avoid black captures caused by GPU compositing.
+if (IS_WINDOWS) {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch('disable-gpu');
+}
 
 // Electron Application Lifecycle
 app.whenReady().then(() => {
@@ -770,7 +815,15 @@ ipcMain.handle('save-to-disk', async (event, dataUrl, defaultName) => {
 
 ipcMain.handle('get-settings', () => {
   const resolvedLanguage = getResolvedLanguage();
-  return { ...settings, resolvedLanguage, updateVersion: updateVersion || null, appVersion: app.getVersion() };
+  return {
+    ...settings,
+    startWithWindows: settings.startAtLogin,
+    resolvedLanguage,
+    updateVersion: updateVersion || null,
+    appVersion: app.getVersion(),
+    platform: process.platform,
+    supportsAutoLaunch: SUPPORTS_LOGIN_ITEMS
+  };
 });
 
 ipcMain.handle('save-settings', (event, newSettings) => {

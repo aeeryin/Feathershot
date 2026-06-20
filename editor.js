@@ -1222,8 +1222,12 @@ window.addEventListener('keydown', (e) => {
     draw();
   }
   
-  if (e.ctrlKey) {
-    if (e.key === 'z' || e.key === 'Z') {
+  const hasPrimaryModifier = e.ctrlKey || e.metaKey;
+  if (hasPrimaryModifier) {
+    if ((e.key === 'z' || e.key === 'Z') && e.shiftKey) {
+      e.preventDefault();
+      redo();
+    } else if (e.key === 'z' || e.key === 'Z') {
       e.preventDefault();
       undo();
     } else if (e.key === 'y' || e.key === 'Y') {
