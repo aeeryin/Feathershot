@@ -84,48 +84,6 @@ window.api.onCaptureImage((dataUrl, lang) => {
   };
 });
 
-let screenImages = [];
-let virtualWidth = 0;
-let virtualHeight = 0;
-
-function stitchScreenshots() {
-  const stitchCanvas = document.createElement('canvas');
-  stitchCanvas.width = virtualWidth;
-  stitchCanvas.height = virtualHeight;
-  const sCtx = stitchCanvas.getContext('2d');
-  
-  screenImages.forEach(s => {
-    sCtx.drawImage(s.img, s.x, s.y, s.w, s.h);
-  });
-  
-  screenshotImg.src = stitchCanvas.toDataURL('image/png');
-  screenshotImg.onload = () => {
-    resizeCanvas();
-    draw();
-  };
-}
-
-if (window.api.onCaptureMultiImage) {
-  window.api.onCaptureMultiImage((screenshots, width, height, lang) => {
-    applyTranslations(lang || 'en');
-    virtualWidth = width;
-    virtualHeight = height;
-    
-    let loadedCount = 0;
-    screenImages = screenshots.map(s => {
-      const img = new Image();
-      img.src = s.url;
-      img.onload = () => {
-        loadedCount++;
-        if (loadedCount === screenshots.length) {
-          stitchScreenshots();
-        }
-      };
-      return { img, x: s.x, y: s.y, w: s.w, h: s.h };
-    });
-  });
-}
-
 function resizeCanvas() {
   dpr = window.devicePixelRatio || 1;
   const width = window.innerWidth;

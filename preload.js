@@ -8,7 +8,6 @@ contextBridge.exposeInMainWorld('api', {
 
   // Cropper specific APIs
   onCaptureImage: (callback) => ipcRenderer.on('capture-image', (event, dataUrl, lang) => callback(dataUrl, lang)),
-  onCaptureMultiImage: (callback) => ipcRenderer.on('capture-multi-image', (event, screenshots, width, height, lang) => callback(screenshots, width, height, lang)),
   cropCompleted: (dataUrl, width, height) => ipcRenderer.send('crop-completed', dataUrl, width, height),
   cancelCrop: () => ipcRenderer.send('cancel-crop'),
   printImage: (dataUrl) => ipcRenderer.send('print-image', dataUrl),
