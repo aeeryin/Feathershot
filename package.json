@@ -24,7 +24,10 @@
     "cross-platform",
     "electron"
   ],
-  "author": "Aeeryin <aeeryin@gmail.com>",
+  "author": {
+    "name": "Aeeryin",
+    "email": "aeeryin@gmail.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/aeeryin/Feathershot.git"
