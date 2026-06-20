@@ -4,12 +4,113 @@ const hotkeyInput = document.getElementById('hotkey-input');
 const recordBtn = document.getElementById('btn-record-hotkey');
 const printScreenBtn = document.getElementById('btn-set-printscreen');
 const toggleMaximized = document.getElementById('toggle-maximized');
+const toggleStartup = document.getElementById('toggle-startup');
 const folderInput = document.getElementById('folder-input');
 const browseBtn = document.getElementById('btn-browse-folder');
 const filenamePatternInput = document.getElementById('filename-pattern');
 const formatSelect = document.getElementById('format-select');
+const languageSelect = document.getElementById('language-select');
 const btnSave = document.getElementById('btn-save-settings');
 const btnCancel = document.getElementById('btn-cancel-settings');
+
+const settingsTranslations = {
+  en: {
+    'app-title': 'Feathershot Settings',
+    'card-default-action-title': 'Default Action',
+    'card-default-action-desc': 'Choose what happens right after you select and crop a screen area.',
+    'action-editor-title': 'Open in Editor',
+    'action-editor-desc': 'Add annotations, text, blur, and markup inside the visual editor.',
+    'action-clipboard-title': 'Copy directly to Clipboard',
+    'action-clipboard-desc': 'Skip the editor and copy the crop directly to your clipboard.',
+    'action-save-title': 'Save directly to folder',
+    'action-save-desc': 'Automatically save the file without prompt to your destination.',
+    'card-language-title': 'Language',
+    'card-language-desc': 'Select the display language for the application.',
+    'language-auto': 'Auto (System Language)',
+    'language-en': 'English',
+    'language-pt': 'Português',
+    'card-hotkey-title': 'Keyboard Hotkey',
+    'card-hotkey-desc': 'Shortcut key to trigger region screen captures.',
+    'btn-record-hotkey': 'Change Hotkey',
+    'hotkey-hint': 'Click "Change Hotkey" to record a combo, or use the PrtSc button to set Print Screen directly.',
+    'card-editor-behavior-title': 'Editor Behavior',
+    'card-editor-behavior-desc': 'Configure how the image editor opens after capture.',
+    'toggle-maximized-title': 'Always open editor maximized',
+    'toggle-maximized-desc': 'The editor window will always open in fullscreen mode, regardless of the image size.',
+    'card-startup-title': 'Startup',
+    'card-startup-desc': 'Control whether the application launches automatically when Windows starts.',
+    'toggle-startup-title': 'Start with Windows',
+    'toggle-startup-desc': 'Feathershot will run in the system tray automatically when you log into Windows.',
+    'card-storage-title': 'Storage & Naming',
+    'card-storage-desc': 'Setup where screenshots are saved and how files are named.',
+    'label-save-folder': 'Save Folder Path',
+    'btn-browse-folder': 'Browse',
+    'label-naming-template': 'File Naming Template',
+    'naming-hint': 'Supported tokens: {yyyy}, {month}, {day}, {hour}, {min}, {sec}',
+    'label-format': 'Format',
+    'format-png': 'PNG (Lossless)',
+    'format-jpeg': 'JPEG (Compressed)',
+    'btn-save-settings': 'Save Configurations',
+    'btn-cancel-settings': 'Cancel'
+  },
+  pt: {
+    'app-title': 'Configurações do Feathershot',
+    'card-default-action-title': 'Ação Padrão',
+    'card-default-action-desc': 'Escolha o que acontece logo após você selecionar e recortar uma área da tela.',
+    'action-editor-title': 'Abrir no Editor',
+    'action-editor-desc': 'Adicione anotações, texto, desfoque e marcações dentro do editor visual.',
+    'action-clipboard-title': 'Copiar diretamente para a Área de Transferência',
+    'action-clipboard-desc': 'Pule o editor e copie o recorte diretamente para a área de transferência.',
+    'action-save-title': 'Salvar diretamente na pasta',
+    'action-save-desc': 'Salve o arquivo automaticamente na sua pasta de destino sem perguntar.',
+    'card-language-title': 'Idioma',
+    'card-language-desc': 'Selecione o idioma de exibição do aplicativo.',
+    'language-auto': 'Automático (Idioma do Sistema)',
+    'language-en': 'Inglês',
+    'language-pt': 'Português',
+    'card-hotkey-title': 'Atalho do Teclado',
+    'card-hotkey-desc': 'Tecla de atalho para iniciar a captura de tela.',
+    'btn-record-hotkey': 'Alterar Atalho',
+    'hotkey-hint': 'Clique em "Alterar Atalho" para registrar uma combinação ou use o botão PrtSc para definir a tecla Print Screen.',
+    'card-editor-behavior-title': 'Comportamento do Editor',
+    'card-editor-behavior-desc': 'Configure como o editor de imagem abre após a captura.',
+    'toggle-maximized-title': 'Sempre abrir o editor maximizado',
+    'toggle-maximized-desc': 'A janela do editor sempre abrirá maximizada, independentemente do tamanho da imagem.',
+    'card-startup-title': 'Inicialização',
+    'card-startup-desc': 'Controle se o aplicativo inicia automaticamente quando o Windows é ligado.',
+    'toggle-startup-title': 'Iniciar com o Windows',
+    'toggle-startup-desc': 'O Feathershot será executado na bandeja do sistema automaticamente ao fazer login no Windows.',
+    'card-storage-title': 'Armazenamento e Nomeação',
+    'card-storage-desc': 'Configure onde as capturas de tela serão salvas e como os arquivos serão nomeados.',
+    'label-save-folder': 'Caminho da Pasta de Salvamento',
+    'btn-browse-folder': 'Procurar',
+    'label-naming-template': 'Modelo de Nome de Arquivo',
+    'naming-hint': 'Tokens suportados: {yyyy}, {month}, {day}, {hour}, {min}, {sec}',
+    'label-format': 'Formato',
+    'format-png': 'PNG (Sem Perdas)',
+    'format-jpeg': 'JPEG (Compactado)',
+    'btn-save-settings': 'Salvar Configurações',
+    'btn-cancel-settings': 'Cancelar'
+  }
+};
+
+function applyTranslations(lang) {
+  const t = settingsTranslations[lang] || settingsTranslations.en;
+  Object.keys(t).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = t[id];
+    }
+  });
+
+  if (lang === 'pt') {
+    hotkeyInput.placeholder = 'Pressione as teclas...';
+    filenamePatternInput.placeholder = 'Captura_{yyyy}-{month}-{day}';
+  } else {
+    hotkeyInput.placeholder = 'Press a hotkey...';
+    filenamePatternInput.placeholder = 'Screenshot_{yyyy}-{month}-{day}';
+  }
+}
 
 let currentSettings = {};
 let isRecordingHotkey = false;
@@ -17,6 +118,9 @@ let isRecordingHotkey = false;
 // Initialize Settings
 async function initSettings() {
   currentSettings = await window.api.getSettings();
+  
+  // Apply resolved translations
+  applyTranslations(currentSettings.resolvedLanguage || 'en');
   
   // Populate default actions radio
   const radio = document.querySelector(`input[name="default-action"][value="${currentSettings.defaultAction}"]`);
@@ -29,9 +133,11 @@ async function initSettings() {
   folderInput.value = currentSettings.saveFolder;
   filenamePatternInput.value = currentSettings.fileNamePattern;
   formatSelect.value = currentSettings.imageFormat;
+  languageSelect.value = currentSettings.language || 'auto';
   
-  // Populate toggle
+  // Populate toggles
   toggleMaximized.checked = currentSettings.alwaysMaximized || false;
+  toggleStartup.checked = currentSettings.startWithWindows || false;
 }
 
 // Window Controls
@@ -149,11 +255,22 @@ btnSave.addEventListener('click', async () => {
     saveFolder: folderInput.value,
     fileNamePattern: filenamePatternInput.value,
     imageFormat: formatSelect.value,
-    alwaysMaximized: toggleMaximized.checked
+    alwaysMaximized: toggleMaximized.checked,
+    startWithWindows: toggleStartup.checked,
+    language: languageSelect.value
   };
   
   await window.api.saveSettings(newSettings);
   window.api.closeWindow();
+});
+
+// Change Language Listener
+languageSelect.addEventListener('change', () => {
+  let lang = languageSelect.value;
+  if (lang === 'auto') {
+    lang = currentSettings.resolvedLanguage || 'en';
+  }
+  applyTranslations(lang);
 });
 
 // Start initialization

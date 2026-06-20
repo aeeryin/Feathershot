@@ -28,8 +28,42 @@ magCanvas.width = MAG_SIZE;
 magCanvas.height = MAG_SIZE;
 let zoomPixels = 16; // default zoom width in physical pixels (approx 8x zoom)
 
+const cropperTranslations = {
+  en: {
+    'menu-editor': 'Open in Editor',
+    'menu-clipboard': 'Copy to Clipboard',
+    'menu-desktop': 'Save to Desktop',
+    'menu-print': 'Print',
+    'hint-overlay': 'Drag to crop | Esc to cancel'
+  },
+  pt: {
+    'menu-editor': 'Abrir no Editor',
+    'menu-clipboard': 'Copiar para a Área de Transferência',
+    'menu-desktop': 'Salvar na Área de Trabalho',
+    'menu-print': 'Imprimir',
+    'hint-overlay': 'Arraste para cortar | Esc para cancelar'
+  }
+};
+
+function applyTranslations(lang) {
+  const t = cropperTranslations[lang] || cropperTranslations.en;
+  
+  const menuEditor = document.querySelector('#menu-editor span');
+  const menuClipboard = document.querySelector('#menu-clipboard span');
+  const menuDesktop = document.querySelector('#menu-desktop span');
+  const menuPrint = document.querySelector('#menu-print span');
+  const hintOverlay = document.querySelector('#hint-overlay span');
+
+  if (menuEditor) menuEditor.textContent = t['menu-editor'];
+  if (menuClipboard) menuClipboard.textContent = t['menu-clipboard'];
+  if (menuDesktop) menuDesktop.textContent = t['menu-desktop'];
+  if (menuPrint) menuPrint.textContent = t['menu-print'];
+  if (hintOverlay) hintOverlay.textContent = t['hint-overlay'];
+}
+
 // Listen for screenshot from Main Process
-window.api.onCaptureImage((dataUrl) => {
+window.api.onCaptureImage((dataUrl, lang) => {
+  applyTranslations(lang || 'en');
   screenshotImg.src = dataUrl;
   screenshotImg.onload = () => {
     resizeCanvas();

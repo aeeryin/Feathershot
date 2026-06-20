@@ -1,6 +1,6 @@
 {
   "name": "feathershot",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Premium, feature-rich screenshot tool for Windows inspired on Greenshot",
   "main": "main.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "windows",
     "electron"
   ],
-  "author": "Feathershot",
+  "author": "Aeeryin",
   "repository": {
     "type": "git",
     "url": "https://github.com/aeeryin/Feathershot.git"
@@ -46,7 +46,7 @@
       "oneClick": true,
       "perMachine": false,
       "allowToChangeInstallationDirectory": false,
-      "artifactName": "feathershot-download.${ext}",
+      "artifactName": "Feathershot-${version}.${ext}",
       "shortcutName": "Feathershot"
     },
     "files": [

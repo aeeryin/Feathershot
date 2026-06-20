@@ -7,14 +7,14 @@ contextBridge.exposeInMainWorld('api', {
   maximizeWindow: () => ipcRenderer.send('window-control', 'maximize'),
 
   // Cropper specific APIs
-  onCaptureImage: (callback) => ipcRenderer.on('capture-image', (event, dataUrl) => callback(dataUrl)),
+  onCaptureImage: (callback) => ipcRenderer.on('capture-image', (event, dataUrl, lang) => callback(dataUrl, lang)),
   cropCompleted: (dataUrl, width, height) => ipcRenderer.send('crop-completed', dataUrl, width, height),
   cancelCrop: () => ipcRenderer.send('cancel-crop'),
   printImage: (dataUrl) => ipcRenderer.send('print-image', dataUrl),
   saveToDesktop: (dataUrl) => ipcRenderer.invoke('save-to-desktop', dataUrl),
 
   // Editor specific APIs
-  onOpenImage: (callback) => ipcRenderer.on('open-image', (event, dataUrl) => callback(dataUrl)),
+  onOpenImage: (callback) => ipcRenderer.on('open-image', (event, dataUrl, lang) => callback(dataUrl, lang)),
   copyToClipboard: (dataUrl) => ipcRenderer.invoke('copy-to-clipboard', dataUrl),
   saveToDisk: (dataUrl, defaultName) => ipcRenderer.invoke('save-to-disk', dataUrl, defaultName),
   closeEditor: () => ipcRenderer.send('close-editor'),

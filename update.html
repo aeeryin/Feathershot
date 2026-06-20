@@ -370,15 +370,15 @@
     <div class="download-stats" id="download-stats" style="display: none;">
       <div class="stat-item">
         <span class="stat-value" id="stat-speed">--</span>
-        <span class="stat-label">Velocidade</span>
+        <span class="stat-label" id="stat-speed-label">Velocidade</span>
       </div>
       <div class="stat-item">
         <span class="stat-value" id="stat-downloaded">--</span>
-        <span class="stat-label">Baixado</span>
+        <span class="stat-label" id="stat-downloaded-label">Baixado</span>
       </div>
       <div class="stat-item">
         <span class="stat-value" id="stat-total">--</span>
-        <span class="stat-label">Total</span>
+        <span class="stat-label" id="stat-total-label">Total</span>
       </div>
     </div>
 
@@ -419,6 +419,39 @@
     const btnLater = document.getElementById('btn-later');
     const container = document.getElementById('update-container');
 
+    const updateTranslations = {
+      en: {
+        'title-updating': 'Updating Feathershot',
+        'subtitle-updating': 'Downloading the latest version<span class="dots"></span>',
+        'status-preparing': 'Preparing download...',
+        'status-downloading': 'Downloading update...',
+        'stat-speed-label': 'Speed',
+        'stat-downloaded-label': 'Downloaded',
+        'stat-total-label': 'Total',
+        'status-complete': 'Download complete!',
+        'title-ready': 'Update Ready!',
+        'subtitle-ready': 'The new version has been downloaded successfully. Restart to apply.',
+        'btn-restart': 'Restart Now',
+        'btn-later': 'Later'
+      },
+      pt: {
+        'title-updating': 'Atualizando Feathershot',
+        'subtitle-updating': 'Baixando a versão mais recente<span class="dots"></span>',
+        'status-preparing': 'Preparando download...',
+        'status-downloading': 'Baixando atualização...',
+        'stat-speed-label': 'Velocidade',
+        'stat-downloaded-label': 'Baixado',
+        'stat-total-label': 'Total',
+        'status-complete': 'Download concluído!',
+        'title-ready': 'Atualização Pronta!',
+        'subtitle-ready': 'A nova versão foi baixada com sucesso. Reinicie para aplicar.',
+        'btn-restart': 'Reiniciar Agora',
+        'btn-later': 'Depois'
+      }
+    };
+
+    let currentLang = 'en';
+
     function formatBytes(bytes) {
       if (bytes === 0) return '0 B';
       const k = 1024;
@@ -429,16 +462,31 @@
 
     // Listen for update events from main process
     window.api.onUpdateProgress((event, data) => {
+      if (data.lang) {
+        currentLang = data.lang;
+        // Apply initial labels
+        const t = updateTranslations[currentLang] || updateTranslations.en;
+        updateTitle.textContent = t['title-updating'];
+        updateSubtitle.innerHTML = t['subtitle-updating'];
+        progressStatus.textContent = t['status-preparing'];
+        document.getElementById('stat-speed-label').textContent = t['stat-speed-label'];
+        document.getElementById('stat-downloaded-label').textContent = t['stat-downloaded-label'];
+        document.getElementById('stat-total-label').textContent = t['stat-total-label'];
+        btnRestart.textContent = t['btn-restart'];
+        btnLater.textContent = t['btn-later'];
+      }
+
       if (data.type === 'version') {
         versionTag.style.display = 'inline-flex';
         versionText.textContent = 'v' + data.version;
       }
 
       if (data.type === 'progress') {
+        const t = updateTranslations[currentLang] || updateTranslations.en;
         const percent = Math.round(data.percent);
         progressFill.style.width = percent + '%';
         progressPercent.textContent = percent + '%';
-        progressStatus.textContent = 'Baixando atualização...';
+        progressStatus.textContent = t['status-downloading'];
         downloadStats.style.display = 'flex';
 
         if (data.bytesPerSecond) {
@@ -453,12 +501,13 @@
       }
 
       if (data.type === 'complete') {
+        const t = updateTranslations[currentLang] || updateTranslations.en;
         container.classList.add('complete');
         progressFill.style.width = '100%';
         progressPercent.textContent = '100%';
-        progressStatus.textContent = 'Download concluído!';
-        updateTitle.textContent = 'Atualização Pronta!';
-        updateSubtitle.innerHTML = 'A nova versão foi baixada com sucesso. Reinicie para aplicar.';
+        progressStatus.textContent = t['status-complete'];
+        updateTitle.textContent = t['title-ready'];
+        updateSubtitle.innerHTML = t['subtitle-ready'];
         btnRestart.style.display = 'block';
         btnLater.style.display = 'block';
       }

@@ -12,7 +12,9 @@ const DEFAULT_SETTINGS = {
   saveFolder: path.join(app.getPath('pictures'), 'Feathershot'),
   imageFormat: 'png', // 'png' | 'jpeg'
   fileNamePattern: 'Screenshot_{yyyy}-{mm}-{dd}_{hh}-{mm}-{ss}',
-  alwaysMaximized: false
+  alwaysMaximized: false,
+  startWithWindows: false,
+  language: 'auto' // 'auto' | 'en' | 'pt'
 };
 
 let settings = { ...DEFAULT_SETTINGS };
@@ -32,11 +34,22 @@ function loadSettings() {
   }
 }
 
+// Apply auto-launch (start with Windows) setting
+function applyAutoLaunch() {
+  app.setLoginItemSettings({
+    openAtLogin: settings.startWithWindows || false,
+    path: app.getPath('exe')
+  });
+}
+
 // Save Settings
 function saveSettings(newSettings) {
   try {
     settings = { ...settings, ...newSettings };
     fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+    
+    // Apply auto-launch setting
+    applyAutoLaunch();
     
     // Create save folder if it doesn't exist
     if (!fs.existsSync(settings.saveFolder)) {
@@ -45,6 +58,15 @@ function saveSettings(newSettings) {
   } catch (err) {
     console.error('Failed to save settings:', err);
   }
+}
+
+// Get Resolved Language (resolves 'auto' using system locale)
+function getResolvedLanguage() {
+  if (settings.language && settings.language !== 'auto') {
+    return settings.language;
+  }
+  const locale = app.getLocale() || 'en';
+  return locale.toLowerCase().startsWith('pt') ? 'pt' : 'en';
 }
 
 // App Windows
@@ -344,7 +366,7 @@ function createCropperWindow(screenshotDataUrl) {
   
   contents.on('did-finish-load', () => {
     if (!contents.isDestroyed()) {
-      contents.send('capture-image', screenshotDataUrl);
+      contents.send('capture-image', screenshotDataUrl, getResolvedLanguage());
     }
   });
   
@@ -357,7 +379,7 @@ function createCropperWindow(screenshotDataUrl) {
 function openEditorWindow(dataUrl, width, height) {
   if (editorWindow && !editorWindow.isDestroyed()) {
     editorWindow.focus();
-    editorWindow.webContents.send('open-image', dataUrl);
+    editorWindow.webContents.send('open-image', dataUrl, getResolvedLanguage());
     return;
   }
   
@@ -412,7 +434,7 @@ function openEditorWindow(dataUrl, width, height) {
       editorWindow.maximize();
     }
     editorWindow.show();
-    editorWindow.webContents.send('open-image', dataUrl);
+    editorWindow.webContents.send('open-image', dataUrl, getResolvedLanguage());
   });
   
   editorWindow.on('closed', () => {
@@ -480,7 +502,8 @@ function openUpdateWindow() {
     if (updateWindow && !updateWindow.isDestroyed() && updateVersion) {
       updateWindow.webContents.send('update-progress', {
         type: 'version',
-        version: updateVersion
+        version: updateVersion,
+        lang: getResolvedLanguage()
       });
     }
   });
@@ -572,6 +595,7 @@ app.commandLine.appendSwitch('disable-gpu');
 // Electron Application Lifecycle
 app.whenReady().then(() => {
   loadSettings();
+  applyAutoLaunch();
   createTray();
   registerShortcuts();
   openSettingsWindow();
@@ -675,7 +699,8 @@ ipcMain.handle('save-to-disk', async (event, dataUrl, defaultName) => {
 });
 
 ipcMain.handle('get-settings', () => {
-  return settings;
+  const resolvedLanguage = getResolvedLanguage();
+  return { ...settings, resolvedLanguage };
 });
 
 ipcMain.handle('save-settings', (event, newSettings) => {

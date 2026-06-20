@@ -70,8 +70,123 @@ winMin.addEventListener('click', () => window.api.minimizeWindow());
 winMax.addEventListener('click', () => window.api.maximizeWindow());
 winClose.addEventListener('click', () => window.api.closeWindow());
 
+const editorTranslations = {
+  en: {
+    'app-title': 'Feathershot',
+    'btn-undo': 'Undo (Ctrl+Z)',
+    'btn-redo': 'Redo (Ctrl+Y)',
+    'btn-rotate-ccw': 'Rotate Counterclockwise',
+    'btn-rotate-cw': 'Rotate Clockwise',
+    'btn-copy': 'Copy to Clipboard (Ctrl+C)',
+    'btn-save': 'Save to File (Ctrl+S)',
+    'btn-copy-text': 'Copy',
+    'btn-save-text': 'Save',
+    'group-tools': 'Tools',
+    'group-properties': 'Properties',
+    'prop-size': 'Size',
+    'prop-fill': 'Fill Shape',
+    'tool-select': 'Select & Move Objects',
+    'tool-rect': 'Rectangle',
+    'tool-ellipse': 'Ellipse',
+    'tool-line': 'Line',
+    'tool-arrow': 'Arrow',
+    'tool-freehand': 'Brush / Freehand Draw',
+    'tool-text': 'Text',
+    'tool-bubble': 'Speech Bubble',
+    'tool-highlight': 'Highlighter',
+    'tool-spotlight': 'Spotlight Highlight',
+    'tool-blur': 'Blur Obfuscator',
+    'tool-pixelate': 'Pixelate Obfuscator',
+    'tool-step': 'Step Counter (Auto-increment)',
+    'tool-crop': 'Crop Screenshot'
+  },
+  pt: {
+    'app-title': 'Feathershot',
+    'btn-undo': 'Desfazer (Ctrl+Z)',
+    'btn-redo': 'Refazer (Ctrl+Y)',
+    'btn-rotate-ccw': 'Girar no Sentido Anti-horário',
+    'btn-rotate-cw': 'Girar no Sentido Horário',
+    'btn-copy': 'Copiar para a Área de Transferência (Ctrl+C)',
+    'btn-save': 'Salvar no Arquivo (Ctrl+S)',
+    'btn-copy-text': 'Copiar',
+    'btn-save-text': 'Salvar',
+    'group-tools': 'Ferramentas',
+    'group-properties': 'Propriedades',
+    'prop-size': 'Tamanho',
+    'prop-fill': 'Preencher Forma',
+    'tool-select': 'Selecionar e Mover Objetos',
+    'tool-rect': 'Retângulo',
+    'tool-ellipse': 'Elipse',
+    'tool-line': 'Linha',
+    'tool-arrow': 'Seta',
+    'tool-freehand': 'Pincel / Desenho Livre',
+    'tool-text': 'Texto',
+    'tool-bubble': 'Balão de Fala',
+    'tool-highlight': 'Marca-texto',
+    'tool-spotlight': 'Destaque Circular',
+    'tool-blur': 'Desfocar Ofuscador',
+    'tool-pixelate': 'Pixelar Ofuscador',
+    'tool-step': 'Contador de Passos (Incremento automático)',
+    'tool-crop': 'Recortar Captura'
+  }
+};
+
+function applyTranslations(lang) {
+  const t = editorTranslations[lang] || editorTranslations.en;
+  
+  const appTitle = document.querySelector('.title-left .app-title');
+  if (appTitle) appTitle.textContent = t['app-title'];
+  
+  const btnUndo = document.getElementById('btn-undo');
+  if (btnUndo) btnUndo.title = t['btn-undo'];
+  
+  const btnRedo = document.getElementById('btn-redo');
+  if (btnRedo) btnRedo.title = t['btn-redo'];
+  
+  const btnRotateCcw = document.getElementById('btn-rotate-ccw');
+  if (btnRotateCcw) btnRotateCcw.title = t['btn-rotate-ccw'];
+  
+  const btnRotateCw = document.getElementById('btn-rotate-cw');
+  if (btnRotateCw) btnRotateCw.title = t['btn-rotate-cw'];
+  
+  const btnCopy = document.getElementById('btn-copy');
+  if (btnCopy) btnCopy.title = t['btn-copy'];
+  
+  const btnSave = document.getElementById('btn-save');
+  if (btnSave) btnSave.title = t['btn-save'];
+  
+  const copyText = document.querySelector('#btn-copy span');
+  if (copyText) copyText.textContent = t['btn-copy-text'];
+  
+  const saveText = document.querySelector('#btn-save span');
+  if (saveText) saveText.textContent = t['btn-save-text'];
+  
+  const groupTools = document.querySelector('#sidebar .tool-group:nth-child(1) .group-label');
+  if (groupTools) groupTools.textContent = t['group-tools'];
+  
+  const groupProperties = document.querySelector('#sidebar .tool-group:nth-child(2) .group-label');
+  if (groupProperties) groupProperties.textContent = t['group-properties'];
+  
+  const propSize = document.querySelector('.property-item:nth-of-type(1) .prop-label');
+  if (propSize) propSize.textContent = t['prop-size'];
+  
+  const propFill = document.querySelector('.property-item:nth-of-type(2) .prop-label');
+  if (propFill) propFill.textContent = t['prop-fill'];
+  
+  const tools = [
+    'tool-select', 'tool-rect', 'tool-ellipse', 'tool-line', 'tool-arrow',
+    'tool-freehand', 'tool-text', 'tool-bubble', 'tool-highlight', 'tool-spotlight',
+    'tool-blur', 'tool-pixelate', 'tool-step', 'tool-crop'
+  ];
+  tools.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.title = t[id];
+  });
+}
+
 // Setup Canvas and Listeners
-window.api.onOpenImage((dataUrl) => {
+window.api.onOpenImage((dataUrl, lang) => {
+  applyTranslations(lang || 'en');
   backgroundImage.src = dataUrl;
   backgroundImage.onload = () => {
     // Reset state
