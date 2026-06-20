@@ -51,6 +51,8 @@ function saveSettings(newSettings) {
 let cropperWindow = null;
 let editorWindow = null;
 let settingsWindow = null;
+let updateWindow = null;
+let updateVersion = null;
 let tray = null;
 
 // App Icon Path (main.png as requested)
@@ -66,7 +68,21 @@ function createTray() {
     { label: 'Capture Region', click: () => triggerScreenCapture() },
     { label: 'Capture Fullscreen', click: () => captureFullscreenDirectly() },
     { type: 'separator' },
+    { label: 'Check for Updates', click: () => {
+      if (app.isPackaged) {
+        autoUpdater.checkForUpdatesAndNotify().catch(err => {
+          dialog.showErrorBox('Update Check Failed', err.message);
+        });
+      } else {
+        dialog.showMessageBox({
+          type: 'info',
+          title: 'Feathershot',
+          message: 'Auto-update is only active in the packaged/production application.'
+        });
+      }
+    }},
     { label: 'Settings', click: () => openSettingsWindow() },
+    { type: 'separator' },
     { label: 'Quit', click: () => app.quit() }
   ]);
   
@@ -434,6 +450,50 @@ function openSettingsWindow() {
   });
 }
 
+function openUpdateWindow() {
+  if (updateWindow && !updateWindow.isDestroyed()) {
+    updateWindow.focus();
+    return;
+  }
+
+  const icon = nativeImage.createFromPath(APP_ICON_PATH);
+
+  updateWindow = new BrowserWindow({
+    width: 450,
+    height: 550,
+    resizable: false,
+    icon: icon,
+    frame: false, // Frameless for a premium styled view
+    show: false,
+    backgroundColor: '#121214',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      devTools: false
+    }
+  });
+
+  updateWindow.loadFile('update.html');
+
+  updateWindow.webContents.on('did-finish-load', () => {
+    if (updateWindow && !updateWindow.isDestroyed() && updateVersion) {
+      updateWindow.webContents.send('update-progress', {
+        type: 'version',
+        version: updateVersion
+      });
+    }
+  });
+
+  updateWindow.once('ready-to-show', () => {
+    updateWindow.show();
+  });
+
+  updateWindow.on('closed', () => {
+    updateWindow = null;
+  });
+}
+
 // Block DevTools keyboard shortcuts globally
 function blockDevTools(win) {
   win.webContents.on('before-input-event', (event, input) => {
@@ -454,25 +514,45 @@ function setupAutoUpdater() {
   
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
+    updateVersion = info.version;
+    openUpdateWindow();
   });
   
+  autoUpdater.on('download-progress', (progressObj) => {
+    console.log('Download progress:', progressObj.percent);
+    if (updateWindow && !updateWindow.isDestroyed()) {
+      updateWindow.webContents.send('update-progress', {
+        type: 'progress',
+        percent: progressObj.percent,
+        bytesPerSecond: progressObj.bytesPerSecond,
+        transferred: progressObj.transferred,
+        total: progressObj.total
+      });
+    }
+  });
+
   autoUpdater.on('update-downloaded', (info) => {
     console.log('Update downloaded:', info.version);
-    // Show notification to user
-    const allWindows = BrowserWindow.getAllWindows();
-    const parentWin = allWindows.length > 0 ? allWindows[0] : null;
-    dialog.showMessageBox(parentWin, {
-      type: 'info',
-      title: 'Feathershot - Update',
-      message: `Nova versão ${info.version} baixada!`,
-      detail: 'A atualização será instalada automaticamente ao fechar o aplicativo. Deseja reiniciar agora?',
-      buttons: ['Reiniciar Agora', 'Depois'],
-      defaultId: 0
-    }).then((result) => {
-      if (result.response === 0) {
-        autoUpdater.quitAndInstall();
-      }
-    });
+    if (updateWindow && !updateWindow.isDestroyed()) {
+      updateWindow.webContents.send('update-progress', {
+        type: 'complete',
+        version: info.version
+      });
+    } else {
+      // Fallback
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Feathershot - Update',
+        message: `Nova versão ${info.version} baixada!`,
+        detail: 'A atualização será instalada automaticamente ao fechar o aplicativo. Deseja reiniciar agora?',
+        buttons: ['Reiniciar Agora', 'Depois'],
+        defaultId: 0
+      }).then((result) => {
+        if (result.response === 0) {
+          autoUpdater.quitAndInstall();
+        }
+      });
+    }
   });
   
   autoUpdater.on('error', (err) => {
@@ -643,4 +723,14 @@ ipcMain.on('print-image', (event, dataUrl) => {
       printWindow.close();
     });
   });
+});
+
+ipcMain.on('update-action', (event, action) => {
+  if (action === 'restart') {
+    autoUpdater.quitAndInstall();
+  } else if (action === 'later') {
+    if (updateWindow) {
+      updateWindow.close();
+    }
+  }
 });
