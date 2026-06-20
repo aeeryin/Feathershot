@@ -5,9 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --publish never",
-    "build": "electron-builder --win --publish never",
-    "publish": "electron-builder --win --publish always"
+    "dist": "electron-builder --win --mac --linux --publish never",
+    "build": "electron-builder --win --mac --linux --publish never",
+    "publish": "electron-builder --win --mac --linux --publish always"
   },
   "keywords": [
     "screenshot",
@@ -41,13 +41,24 @@
           ]
         }
       ],
-      "icon": "main.png"
+      "icon": "main.png",
+      "artifactName": "Feathershot-${version}-windows.${ext}"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "main.png",
+      "artifactName": "Feathershot-${version}-macos.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "main.png",
+      "artifactName": "Feathershot-${version}-linux.${ext}"
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "allowToChangeInstallationDirectory": false,
-      "artifactName": "Feathershot-${version}.${ext}",
+      "artifactName": "Feathershot-${version}-windows.${ext}",
       "shortcutName": "Feathershot"
     },
     "files": [

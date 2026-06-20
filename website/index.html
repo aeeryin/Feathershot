@@ -307,12 +307,12 @@
     const icons = {
       windows: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.45H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.101zM10.8 1.95L24 0v11.55H10.8V1.95zM10.8 12.45H24v11.55l-13.2-1.95v-9.6z"/></svg>`,
       mac: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.2.67-2.92 1.49-.62.71-1.16 1.85-1.01 2.96 1.12.09 2.27-.58 2.94-1.39z"/></svg>`,
-      linux: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 2a5 5 0 0 0-5 5v3.13c0 .87.35 1.7.98 2.31l-1.02 2.04c-.38.76.17 1.62 1.02 1.62h.11c-.55.67-.88 1.48-.88 2.36C7.21 20.35 8.79 22 10.74 22c2.09 0 3.42-1.33 3.86-2.92.3.17.65.29 1.04.29 1.33 0 2.21-1.24 1.79-2.5l-1.39-4.17c.56-.56.91-1.34.91-2.2V7a5 5 0 0 0-5-5zm0 1.5a3.5 3.5 0 0 1 3.5 3.5v2c0 1-.5 2-1.5 2.5-.5.25-1 .5-2 1h-.5a4.34 4.34 0 0 1-2-1c-1-.5-1.5-1.5-1.5-2.5V7a3.5 3.5 0 0 1 3.5-3.5zm-3.5 9c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5zm7 0c.28 0 .5.22.5.5s-.22.5-.5.5-.5-.22-.5-.5.22-.5.5-.5z"/></svg>`
+      linux: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.248 2c-3.14 0-5.712 2.572-5.712 5.712 0 1.25.402 2.41 1.071 3.348l-.759 1.518C6.305 13.682 6 14.808 6 16c0 3.313 2.687 6 6 6s6-2.687 6-6c0-1.192-.305-2.318-.848-3.422l-.759-1.518c.669-.938 1.071-2.098 1.071-3.348 0-3.14-2.572-5.712-5.712-5.712zm-1.714 5.143c.473 0 .857.384.857.857s-.384.857-.857.857-.857-.384-.857-.857.384-.857.857-.857zm3.428 0c.473 0 .857.384.857.857s-.384.857-.857.857-.857-.384-.857-.857.384-.857.857-.857z"/></svg>`
     };
 
     // Release download URLs
     let urls = {
-      windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1.exe`,
+      windows: `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-1.2.1-windows.exe`,
       mac: `https://github.com/${repoOwner}/${repoName}/releases`,
       linux: `https://github.com/${repoOwner}/${repoName}/releases`
     };
@@ -350,20 +350,22 @@
           const data = await response.json();
           const version = data.tag_name;
           versionBadge.textContent = version;
+          const cleanVer = version.replace('v', '');
           
           // Find Windows (.exe)
-          const winAsset = data.assets.find(asset => asset.name.endsWith('.exe'));
+          const winAsset = data.assets.find(asset => asset.name.endsWith('.exe') && asset.name.includes('-windows'));
           if (winAsset) urls.windows = winAsset.browser_download_url;
+          else urls.windows = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-windows.exe`;
           
           // Find Mac (.dmg or .zip)
-          const macAsset = data.assets.find(asset => asset.name.endsWith('.dmg') || asset.name.endsWith('.zip'));
+          const macAsset = data.assets.find(asset => (asset.name.endsWith('.dmg') || asset.name.endsWith('.zip')) && asset.name.includes('-macos'));
           if (macAsset) urls.mac = macAsset.browser_download_url;
-          else urls.mac = `https://github.com/${repoOwner}/${repoName}/releases/tag/${version}`;
+          else urls.mac = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-macos.dmg`;
 
           // Find Linux (.deb or .AppImage)
-          const linuxAsset = data.assets.find(asset => asset.name.endsWith('.deb') || asset.name.endsWith('.AppImage'));
+          const linuxAsset = data.assets.find(asset => (asset.name.endsWith('.deb') || asset.name.endsWith('.AppImage')) && asset.name.includes('-linux'));
           if (linuxAsset) urls.linux = linuxAsset.browser_download_url;
-          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/tag/${version}`;
+          else urls.linux = `https://github.com/${repoOwner}/${repoName}/releases/latest/download/Feathershot-${cleanVer}-linux.AppImage`;
         }
       } catch (err) {
         console.error('Failed to query release details from GitHub API:', err);
