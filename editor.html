@@ -38,14 +38,6 @@
           <path d="M21 3v5h-5" />
         </svg>
       </button>
-      <button id="btn-resize" class="action-btn" title="Resize Image">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="2" width="20" height="20" rx="2" ry="2" fill="currentColor" fill-opacity="0.25" />
-          <line x1="12" y1="2" x2="12" y2="22" />
-          <line x1="2" y1="12" x2="22" y2="12" />
-        </svg>
-        <span>Resize</span>
-      </button>
       <div class="divider"></div>
       <button id="btn-copy" class="action-btn primary" title="Copy to Clipboard (Ctrl+C)">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -220,9 +212,6 @@
     <div id="workspace">
       <div id="canvas-wrapper">
         <canvas id="editor-canvas"></canvas>
-        <div class="canvas-handle right" id="handle-r"></div>
-        <div class="canvas-handle bottom" id="handle-b"></div>
-        <div class="canvas-handle corner" id="handle-br"></div>
       </div>
     </div>
   </div>
@@ -237,34 +226,6 @@
   <!-- Dialog or Input overlays (e.g. for dynamic text inputs) -->
   <div id="text-input-overlay" style="display: none;">
     <textarea id="canvas-textarea" rows="1"></textarea>
-  </div>
-
-  <!-- Resize Modal Dialog -->
-  <div id="resize-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Redimensionar Imagem</h3>
-        <button id="resize-modal-close" class="modal-close-btn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="input-group">
-          <label for="resize-width">Largura (px):</label>
-          <input type="number" id="resize-width" min="1" step="1">
-        </div>
-        <div class="input-group">
-          <label for="resize-height">Altura (px):</label>
-          <input type="number" id="resize-height" min="1" step="1">
-        </div>
-        <div class="input-checkbox">
-          <input type="checkbox" id="resize-lock-ratio" checked>
-          <label for="resize-lock-ratio">Manter proporção</label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="btn-resize-cancel" class="modal-btn secondary">Cancelar</button>
-        <button id="btn-resize-apply" class="modal-btn primary">Aplicar</button>
-      </div>
-    </div>
   </div>
 
   <script src="editor.js"></script>

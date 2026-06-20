@@ -142,14 +142,17 @@ function showQuickMenu(x, y) {
 function getCroppedDataUrl() {
   if (!croppedRect) return null;
   const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = croppedRect.w * dpr;
-  cropCanvas.height = croppedRect.h * dpr;
+  const scaleX = screenshotImg.naturalWidth / window.innerWidth;
+  const scaleY = screenshotImg.naturalHeight / window.innerHeight;
+  
+  cropCanvas.width = croppedRect.w * scaleX;
+  cropCanvas.height = croppedRect.h * scaleY;
   const cropCtx = cropCanvas.getContext('2d');
   
   cropCtx.drawImage(
     screenshotImg,
-    croppedRect.x * dpr, croppedRect.y * dpr, croppedRect.w * dpr, croppedRect.h * dpr,
-    0, 0, croppedRect.w * dpr, croppedRect.h * dpr
+    croppedRect.x * scaleX, croppedRect.y * scaleY, croppedRect.w * scaleX, croppedRect.h * scaleY,
+    0, 0, croppedRect.w * scaleX, croppedRect.h * scaleY
   );
   return cropCanvas.toDataURL('image/png');
 }
@@ -282,13 +285,15 @@ function draw() {
   ctx.fillText(coordText, px + 6, py + 13);
   ctx.restore();
 
-  if (isDragging) {
+  if (isDragging || isFrozen) {
     const rect = getSelectedRect();
     
     // Clear dark overlay for the crop region by redrawing screenshot
+    const scaleX = screenshotImg.naturalWidth / window.innerWidth;
+    const scaleY = screenshotImg.naturalHeight / window.innerHeight;
     ctx.drawImage(
       screenshotImg,
-      rect.x * dpr, rect.y * dpr, rect.w * dpr, rect.h * dpr, // Source coordinates (physical)
+      rect.x * scaleX, rect.y * scaleY, rect.w * scaleX, rect.h * scaleY, // Source coordinates (physical)
       rect.x, rect.y, rect.w, rect.h // Destination coordinates (logical)
     );
     
@@ -343,9 +348,12 @@ function updateMagnifier(mouseX, mouseY) {
   
   magCtx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
   
+  const scaleX = screenshotImg.naturalWidth / window.innerWidth;
+  const scaleY = screenshotImg.naturalHeight / window.innerHeight;
+  
   // Zoom into zoomPixels window of physical pixels
-  const zoomSrcX = (mouseX * dpr) - (zoomPixels / 2);
-  const zoomSrcY = (mouseY * dpr) - (zoomPixels / 2);
+  const zoomSrcX = (mouseX * scaleX) - (zoomPixels / 2);
+  const zoomSrcY = (mouseY * scaleY) - (zoomPixels / 2);
   
   magCtx.imageSmoothingEnabled = false;
   magCtx.drawImage(

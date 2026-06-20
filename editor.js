@@ -11,39 +11,26 @@ const btnCopy = document.getElementById('btn-copy');
 const btnSave = document.getElementById('btn-save');
 const btnRotateCw = document.getElementById('btn-rotate-cw');
 const btnRotateCcw = document.getElementById('btn-rotate-ccw');
-const btnResize = document.getElementById('btn-resize');
 const winMin = document.getElementById('win-min');
 const winMax = document.getElementById('win-max');
 const winClose = document.getElementById('win-close');
 
-// Resize Modal elements
-const resizeModal = document.getElementById('resize-modal');
-const resizeModalClose = document.getElementById('resize-modal-close');
-const resizeWidth = document.getElementById('resize-width');
-const resizeHeight = document.getElementById('resize-height');
-const resizeLockRatio = document.getElementById('resize-lock-ratio');
-const btnResizeCancel = document.getElementById('btn-resize-cancel');
-const btnResizeApply = document.getElementById('btn-resize-apply');
+// Text Overlay elements
+const textOverlay = document.getElementById('text-input-overlay');
+const canvasTextarea = document.getElementById('canvas-textarea');
 
-// Sidebar controls
+// Properties & Status Elements
 const toolButtons = document.querySelectorAll('.tool-btn');
 const strokeWidthInput = document.getElementById('stroke-width');
 const strokeWidthVal = document.getElementById('stroke-width-val');
 const fillShapeInput = document.getElementById('fill-shape');
 const fillPropContainer = document.getElementById('fill-prop-container');
-const colorSwatches = document.querySelectorAll('.color-swatch:not(.custom)');
-const customColorBtn = document.getElementById('custom-color-btn');
+const colorSwatches = document.querySelectorAll('.color-palette .color-swatch:not(.custom)');
 const customColorPicker = document.getElementById('custom-color-picker');
-const propLabelSize = document.querySelector('.property-item:first-of-type .prop-label');
-
-// Statusbar info
-const statusZoom = document.getElementById('status-zoom');
-const statusCoords = document.getElementById('status-coords');
+const customColorBtn = document.getElementById('custom-color-btn');
 const statusDims = document.getElementById('status-dims');
-
-// Text Overlay elements
-const textOverlay = document.getElementById('text-input-overlay');
-const canvasTextarea = document.getElementById('canvas-textarea');
+const statusCoords = document.getElementById('status-coords');
+const propLabelSize = document.querySelector('.property-item .prop-label');
 
 // State Variables
 let backgroundImage = new Image();
@@ -1283,197 +1270,6 @@ function bakeDrawings() {
   backgroundImage = new Image();
   backgroundImage.src = tempCanvas.toDataURL('image/png');
   backgroundImage.onload = () => {
-    objects = [];
-    selectedObject = null;
-    draw();
-  };
-}
-
-// Resize (Stretch/Scale) function
-function resizeImageStretch(newW, newH) {
-  saveState();
-  
-  const oldW = canvas.width;
-  const oldH = canvas.height;
-  
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = newW;
-  tempCanvas.height = newH;
-  const tempCtx = tempCanvas.getContext('2d');
-  
-  // Bake drawings first
-  const bakeCanvas = document.createElement('canvas');
-  bakeCanvas.width = oldW;
-  bakeCanvas.height = oldH;
-  const bakeCtx = bakeCanvas.getContext('2d');
-  bakeCtx.drawImage(backgroundImage, 0, 0);
-  objects.forEach(obj => drawObject(bakeCtx, obj));
-  
-  // Draw and scale baked image
-  tempCtx.drawImage(bakeCanvas, 0, 0, oldW, oldH, 0, 0, newW, newH);
-  
-  backgroundImage = new Image();
-  backgroundImage.src = tempCanvas.toDataURL('image/png');
-  backgroundImage.onload = () => {
-    canvas.width = newW;
-    canvas.height = newH;
-    resizeCanvasWrapper();
-    statusDims.textContent = `${newW} × ${newH} px`;
-    objects = [];
-    selectedObject = null;
-    draw();
-  };
-}
-
-// Resize Modal Listeners
-btnResize.addEventListener('click', () => {
-  resizeWidth.value = canvas.width;
-  resizeHeight.value = canvas.height;
-  resizeModal.style.display = 'flex';
-});
-
-const closeResizeModal = () => {
-  resizeModal.style.display = 'none';
-};
-
-resizeModalClose.addEventListener('click', closeResizeModal);
-btnResizeCancel.addEventListener('click', closeResizeModal);
-
-// Keep aspect ratio
-resizeWidth.addEventListener('input', () => {
-  if (resizeLockRatio.checked) {
-    const ratio = canvas.width / canvas.height;
-    const val = parseInt(resizeWidth.value);
-    if (!isNaN(val) && val > 0) {
-      resizeHeight.value = Math.round(val / ratio);
-    }
-  }
-});
-
-resizeHeight.addEventListener('input', () => {
-  if (resizeLockRatio.checked) {
-    const ratio = canvas.width / canvas.height;
-    const val = parseInt(resizeHeight.value);
-    if (!isNaN(val) && val > 0) {
-      resizeWidth.value = Math.round(val * ratio);
-    }
-  }
-});
-
-btnResizeApply.addEventListener('click', () => {
-  const newW = parseInt(resizeWidth.value);
-  const newH = parseInt(resizeHeight.value);
-  
-  if (!isNaN(newW) && newW > 0 && !isNaN(newH) && newH > 0) {
-    if (newW !== canvas.width || newH !== canvas.height) {
-      resizeImageStretch(newW, newH);
-    }
-  }
-  closeResizeModal();
-});
-
-// MS Paint-style Workspace Resizing Handles
-let isResizingWorkspace = false;
-let activeResizeHandle = null;
-let workspaceResizeStartW = 0;
-let workspaceResizeStartH = 0;
-let workspaceDragStartX = 0;
-let workspaceDragStartY = 0;
-
-const handleR = document.getElementById('handle-r');
-const handleB = document.getElementById('handle-b');
-const handleBR = document.getElementById('handle-br');
-
-function initResizeHandle(handleElement, type) {
-  handleElement.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    isResizingWorkspace = true;
-    activeResizeHandle = type;
-    workspaceResizeStartW = canvas.width;
-    workspaceResizeStartH = canvas.height;
-    workspaceDragStartX = e.clientX;
-    workspaceDragStartY = e.clientY;
-  });
-}
-
-initResizeHandle(handleR, 'r');
-initResizeHandle(handleB, 'b');
-initResizeHandle(handleBR, 'br');
-
-window.addEventListener('mousemove', (e) => {
-  if (!isResizingWorkspace) return;
-  
-  const dxLogical = e.clientX - workspaceDragStartX;
-  const dyLogical = e.clientY - workspaceDragStartY;
-  
-  const dpr = window.devicePixelRatio || 1;
-  const dx = dxLogical * dpr;
-  const dy = dyLogical * dpr;
-  
-  let newW = workspaceResizeStartW;
-  let newH = workspaceResizeStartH;
-  
-  if (activeResizeHandle === 'r' || activeResizeHandle === 'br') {
-    newW = Math.max(50, Math.round(workspaceResizeStartW + dx));
-  }
-  if (activeResizeHandle === 'b' || activeResizeHandle === 'br') {
-    newH = Math.max(50, Math.round(workspaceResizeStartH + dy));
-  }
-  
-  // Dynamic visual feedback using CSS sizing on wrapper
-  wrapper.style.width = `${newW / dpr}px`;
-  wrapper.style.height = `${newH / dpr}px`;
-  statusDims.textContent = `${newW} × ${newH} px`;
-});
-
-window.addEventListener('mouseup', () => {
-  if (!isResizingWorkspace) return;
-  isResizingWorkspace = false;
-  
-  const dpr = window.devicePixelRatio || 1;
-  const finalW = Math.round(parseFloat(wrapper.style.width) * dpr);
-  const finalH = Math.round(parseFloat(wrapper.style.height) * dpr);
-  
-  if (finalW !== canvas.width || finalH !== canvas.height) {
-    resizeWorkspaceCanvas(finalW, finalH);
-  }
-});
-
-function resizeWorkspaceCanvas(newW, newH) {
-  saveState();
-  
-  const oldW = canvas.width;
-  const oldH = canvas.height;
-  
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = newW;
-  tempCanvas.height = newH;
-  const tempCtx = tempCanvas.getContext('2d');
-  
-  // Fill empty space with black
-  tempCtx.fillStyle = '#000000';
-  tempCtx.fillRect(0, 0, newW, newH);
-  
-  // Bake drawings
-  const bakeCanvas = document.createElement('canvas');
-  bakeCanvas.width = oldW;
-  bakeCanvas.height = oldH;
-  const bakeCtx = bakeCanvas.getContext('2d');
-  bakeCtx.drawImage(backgroundImage, 0, 0);
-  objects.forEach(obj => drawObject(bakeCtx, obj));
-  
-  // Copy without stretching
-  tempCtx.drawImage(bakeCanvas, 0, 0);
-  
-  backgroundImage = new Image();
-  backgroundImage.src = tempCanvas.toDataURL('image/png');
-  backgroundImage.onload = () => {
-    canvas.width = newW;
-    canvas.height = newH;
-    resizeCanvasWrapper();
-    statusDims.textContent = `${newW} × ${newH} px`;
     objects = [];
     selectedObject = null;
     draw();

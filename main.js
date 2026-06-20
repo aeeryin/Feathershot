@@ -1,6 +1,8 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, clipboard, nativeImage, dialog, screen, Tray, Menu, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
+const { execFile } = require('child_process');
 const { autoUpdater } = require('electron-updater');
 
 // Default Settings
@@ -101,51 +103,72 @@ function generateFileName() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   
-  const mapping = {
-    '{yyyy}': now.getFullYear(),
-    '{mm}': pad(now.getMonth() + 1),
-    '{dd}': pad(now.getDate()),
-    '{hh}': pad(now.getHours()),
-    '{mm}': pad(now.getMinutes()), // Note: re-defined below for convenience
-    '{ss}': pad(now.getSeconds())
-  };
-  
   let name = settings.fileNamePattern;
+  
   name = name.replace('{yyyy}', now.getFullYear());
-  name = name.replace('{mm}', pad(now.getMonth() + 1));
+  name = name.replace('{mm}', pad(now.getMonth() + 1)); // first {mm} = month
+  name = name.replace('{mm}', pad(now.getMinutes()));   // second {mm} = minutes
   name = name.replace('{dd}', pad(now.getDate()));
   name = name.replace('{hh}', pad(now.getHours()));
   name = name.replace('{ss}', pad(now.getSeconds()));
-  
-  // Handle minute replacement carefully (since it shares 'mm' with month, standard template uses {min} or similar, let's fix it by parsing both)
-  // Let's replace '{min}' or support '{mm}' contextually if user uses it. Let's replace '{min}' or '{min}' with pad(now.getMinutes())
   name = name.replace('{min}', pad(now.getMinutes()));
-  // If the user used {mm} twice, we replace the second instance or we can just support both. Let's make sure it handles {mm} in time:
-  // Usually users use {mm} for month and {MM} or {min} for minute. Let's support:
-  // {yyyy} - Year
-  // {month} - Month
-  // {day} - Day
-  // {hour} - Hour
-  // {min} - Minute
-  // {sec} - Second
-  // Let's replace standard ones:
   name = name.replace('{month}', pad(now.getMonth() + 1));
   name = name.replace('{day}', pad(now.getDate()));
   name = name.replace('{hour}', pad(now.getHours()));
   name = name.replace('{sec}', pad(now.getSeconds()));
   
-  // Also clean up any characters not allowed in file names
+  // Clean up any characters not allowed in file names
   name = name.replace(/[\\/:*?"<>|]/g, '_');
   
   return `${name}.${settings.imageFormat}`;
 }
 
-// Screenshot using desktopCapturer
-async function captureScreen() {
+// Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
+// Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
+function captureScreenViaPowerShell() {
+  return new Promise((resolve, reject) => {
+    const tmpFile = path.join(os.tmpdir(), `feathershot_${Date.now()}.png`);
+    const escapedPath = tmpFile.replace(/\\/g, '\\\\');
+
+    const script = `Add-Type -AssemblyName System.Drawing,System.Windows.Forms; $s=[System.Windows.Forms.Screen]::PrimaryScreen.Bounds; $b=New-Object System.Drawing.Bitmap($s.Width,$s.Height); $g=[System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($s.X,$s.Y,0,0,$s.Size); $b.Save('${escapedPath}',[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();`;
+
+    console.log('[Feathershot] PowerShell: salvando screenshot em', tmpFile);
+    console.log('[Feathershot] PowerShell script:', script);
+
+    execFile('powershell', ['-STA', '-NoProfile', '-NonInteractive', '-Command', script], { timeout: 30000 }, (error, stdout, stderr) => {
+      if (error) {
+        console.error('[Feathershot] PowerShell ERRO:', error.message);
+        if (stderr) console.error('[Feathershot] PowerShell stderr:', stderr);
+        return reject(new Error(stderr?.trim() || error.message));
+      }
+      console.log('[Feathershot] PowerShell executou com sucesso');
+      try {
+        if (!fs.existsSync(tmpFile)) {
+          console.error('[Feathershot] Arquivo de screenshot NÃO foi criado:', tmpFile);
+          return reject(new Error('PowerShell não criou o arquivo de screenshot'));
+        }
+        const data = fs.readFileSync(tmpFile);
+        console.log('[Feathershot] Arquivo lido, tamanho:', data.length, 'bytes');
+        try { fs.unlinkSync(tmpFile); } catch (_) {}
+        resolve(`data:image/png;base64,${data.toString('base64')}`);
+      } catch (e) {
+        console.error('[Feathershot] Erro ao ler arquivo:', e);
+        reject(e);
+      }
+    });
+  });
+}
+
+// Screenshot using desktopCapturer (fallback)
+async function captureScreenViaDesktopCapturer() {
+  console.log('[Feathershot] Usando desktopCapturer como fallback...');
+
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.bounds;
   const scaleFactor = primaryDisplay.scaleFactor;
-  
+
+  console.log('[Feathershot] Display:', { width, height, scaleFactor });
+
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
     thumbnailSize: {
@@ -153,20 +176,65 @@ async function captureScreen() {
       height: Math.round(height * scaleFactor)
     }
   });
-  
+
+  console.log('[Feathershot] desktopCapturer retornou', sources.length, 'fonte(s)');
+
   if (sources.length > 0) {
-    return sources[0].thumbnail.toDataURL();
+    const thumbnail = sources[0].thumbnail;
+    console.log('[Feathershot] Thumbnail vazio:', thumbnail.isEmpty(), 'size:', thumbnail.getSize());
+    if (!thumbnail.isEmpty()) {
+      const url = thumbnail.toDataURL();
+      console.log('[Feathershot] toDataURL tamanho:', url.length);
+      return url;
+    }
+    // Fallback: try without DPI scaling
+    console.log('[Feathershot] Tentando sem DPI scaling...');
+    const fallbackSources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: { width, height }
+    });
+    if (fallbackSources.length > 0 && !fallbackSources[0].thumbnail.isEmpty()) {
+      const url = fallbackSources[0].thumbnail.toDataURL();
+      console.log('[Feathershot] Fallback toDataURL tamanho:', url.length);
+      return url;
+    }
   }
-  throw new Error('No screen source found');
+  throw new Error('desktopCapturer returned no valid screen source');
+}
+
+// Screenshot: try PowerShell first (reliable on Windows), fallback to desktopCapturer
+async function captureScreen() {
+  console.log('[Feathershot] Iniciando captura de tela...');
+  try {
+    const result = await captureScreenViaPowerShell();
+    console.log('[Feathershot] Captura via PowerShell OK');
+    return result;
+  } catch (err) {
+    console.warn('[Feathershot] PowerShell falhou, tentando desktopCapturer:', err.message);
+  }
+  return await captureScreenViaDesktopCapturer();
 }
 
 // Capture full screen directly without cropping
 async function captureFullscreenDirectly() {
   try {
+    const wasEditorVisible = editorWindow && !editorWindow.isDestroyed() && editorWindow.isVisible();
+    const wasSettingsVisible = settingsWindow && !settingsWindow.isDestroyed() && settingsWindow.isVisible();
+
+    if (wasEditorVisible) editorWindow.hide();
+    if (wasSettingsVisible) settingsWindow.hide();
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     const dataUrl = await captureScreen();
+
+    if (wasEditorVisible) editorWindow.show();
+    if (wasSettingsVisible) settingsWindow.show();
+
     handleScreenshotResult(dataUrl);
   } catch (err) {
     console.error('Fullscreen capture failed:', err);
+    dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
   }
 }
 
@@ -192,6 +260,7 @@ async function triggerScreenCapture() {
     createCropperWindow(screenshotDataUrl);
   } catch (err) {
     console.error('Failed to trigger capture:', err);
+    dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
   }
 }
 
@@ -242,6 +311,7 @@ function createCropperWindow(screenshotDataUrl) {
     transparent: true,
     alwaysOnTop: true,
     fullscreen: true,
+    resizable: false,
     enableLargerThanScreen: true,
     skipTaskbar: true,
     webPreferences: {
@@ -252,10 +322,14 @@ function createCropperWindow(screenshotDataUrl) {
     }
   });
   
+  const contents = cropperWindow.webContents;
+
   cropperWindow.loadFile('cropper.html');
   
-  cropperWindow.webContents.on('did-finish-load', () => {
-    cropperWindow.webContents.send('capture-image', screenshotDataUrl);
+  contents.on('did-finish-load', () => {
+    if (!contents.isDestroyed()) {
+      contents.send('capture-image', screenshotDataUrl);
+    }
   });
   
   cropperWindow.on('closed', () => {
@@ -302,6 +376,7 @@ function openEditorWindow(dataUrl, width, height) {
     height: Math.round(winHeight),
     minWidth: 800,
     minHeight: 600,
+    resizable: false,
     icon: icon,
     frame: false, // Frameless window for beautiful custom title bar
     show: false,
@@ -409,6 +484,10 @@ function setupAutoUpdater() {
     console.log('Update check skipped (dev mode or no internet):', err.message);
   });
 }
+
+// Disable hardware acceleration to fix black screenshots on Windows (Electron + desktopCapturer GPU issue)
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu');
 
 // Electron Application Lifecycle
 app.whenReady().then(() => {
