@@ -17,6 +17,11 @@ jobs:
   release:
     name: Build & Publish ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
+      (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
+      (matrix.name == 'Linux' && contains(github.ref, '-linux'))
     
     strategy:
       fail-fast: false
