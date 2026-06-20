@@ -5,109 +5,105 @@
 <h1 align="center">Feathershot</h1>
 
 <p align="center">
-  <b>🇧🇷 Ferramenta de captura de tela premium, feita no Brasil!</b>
+  <b>Premium, feature-rich screenshot tool for Windows inspired by Greenshot!</b>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/plataforma-Windows-blue?style=flat-square&logo=windows" alt="Windows">
-  <img src="https://img.shields.io/badge/licença-MIT-green?style=flat-square" alt="MIT License">
-  <img src="https://img.shields.io/badge/feito%20com-Electron-47848F?style=flat-square&logo=electron" alt="Electron">
-  <img src="https://img.shields.io/badge/feito%20no-Brasil%20🇧🇷-009c3b?style=flat-square" alt="Made in Brazil">
+  <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square&logo=windows" alt="Windows">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License">
+  <img src="https://img.shields.io/badge/made%20with-Electron-47848F?style=flat-square&logo=electron" alt="Electron">
+  <img src="https://img.shields.io/badge/made%20in-Brazil%20🇧🇷-009c3b?style=flat-square" alt="Made in Brazil">
 </p>
 
 ---
 
-## 📸 Sobre
+## 📸 About
 
-**Feathershot** é uma ferramenta de captura de tela completa e moderna para Windows, inspirada no [Greenshot](https://getgreenshot.org/), mas com uma interface visual premium e recursos avançados de edição.
+**Feathershot** is a comprehensive and modern screenshot tool for Windows, inspired by [Greenshot](https://getgreenshot.org/) but built with a premium visual interface, fluid animations, and advanced image editing capabilities.
 
-Desenvolvido com ❤️ no **Brasil**, o Feathershot foi criado para ser uma alternativa leve, bonita e funcional para quem precisa de capturas de tela com qualidade profissional.
+Created with care, Feathershot aims to be a lightweight, beautiful, and highly functional alternative for anyone who needs professional-grade screenshots and annotations instantly.
 
-## ✨ Funcionalidades
+## ✨ Features
 
-### 📷 Captura
-- **Captura de região** — Selecione qualquer área da tela com precisão
-- **Captura de tela inteira** — Congela a tela e permite selecionar a área desejada
-- **Zoom com scroll** — Ajuste o nível de zoom durante a seleção
-- **Lupa com pixel grid** — Visualize pixels individualmente para precisão máxima
-- **Indicadores de dimensão** — Mostra largura × altura em tempo real
+### 📷 Capture
+- **Region Capture** — Select any area of your screen with sub-pixel precision.
+- **DPI & Multi-Monitor Support** — Multi-monitor support tracks mouse position to capture the correct display natively.
+- **Scroll to Zoom** — Adjust zoom magnification dynamically using the mouse scroll wheel while selecting an area.
+- **Magnifier with Pixel Grid** — View individual pixels around the crosshair for pixel-perfect cropping.
+- **Dimension Indicators** — Real-time display of crop width × height.
 
-### 🎨 Editor Completo
-- **Desenho livre** — Desenhe à mão com pincel personalizável
-- **Formas geométricas** — Retângulos, elipses e linhas
-- **Setas** — Para apontar e destacar elementos
-- **Texto** — Adicione textos com fonte e tamanho configuráveis
-- **Balão de fala** — Estilo Greenshot com arrastar e posicionar
-- **Desfoque/Blur** — Borre áreas sensíveis da imagem
-- **Realce (Highlight)** — Destaque regiões importantes
-- **Recorte (Crop)** — Recorte áreas específicas
-- **Redimensionar** — Altere as dimensões da imagem
-- **Alças de redimensionamento** — Estilo Paint para ajustar o workspace
-- **Arrastar e soltar** — Arraste imagens do PC diretamente para o editor
+### 🎨 Annotation & Editing
+- **Freehand Drawing** — Annotate naturally with customizable brush sizes and colors.
+- **Geometric Shapes** — Easily draw perfect rectangles, ellipses, and lines.
+- **Arrows** — Point out and emphasize specific elements.
+- **Text Tool** — Add customizable text blocks with adjustable styling.
+- **Speech Bubble** — Greenshot-style text bubble with drag-to-aim pointer.
+- **Blur/Obfuscate** — Protect sensitive user data by blurring regions.
+- **Highlighter** — Highlight text or key sections with semi-transparent markers.
+- **Crop & Resize** — Crop down selections or resize the entire canvas dynamically.
+- **Resize Handles** — Paint-style canvas borders to adjust your workspace.
+- **Drag and Drop** — Drag images from your computer directly into the editor.
 
-### ⚡ Ações Rápidas
-- **Copiar para a área de transferência**
-- **Abrir no editor**
-- **Imprimir diretamente**
+### ⚡ Quick Actions
+- **Copy directly to clipboard**
+- **Open inside the visual editor**
+- **Save directly to folders**
+- **Direct printing**
 
-### ⚙️ Configurações
-- **Atalho global personalizável** — Defina a tecla de captura
-- **Diretório de salvamento** — Escolha onde salvar as capturas
-- **Formato de imagem** — PNG, JPG ou WebP
-- **Ação padrão** — Configure o que acontece após a captura
+### ⚙️ Configurations
+- **Global Hotkey** — Customize the shortcut to capture screens (default: `PrtSc` or `Ctrl+Shift+S`).
+- **Startup Integration** — Run automatically on system startup to reside silently in the system tray.
+- **Output Formats** — Select between lossless PNG or compressed JPEG.
+- **Custom Naming Patterns** — Save files using timestamp templates.
 
-## 🚀 Instalação
+## 🚀 Getting Started
 
-### Download Rápido
-Baixe a versão mais recente na página de [**Releases**](../../releases):
-1. Acesse a aba **Releases** do repositório
-2. Baixe o arquivo `feathershot-download.exe`
-3. Execute e pronto! Não precisa instalar nada.
+### Quick Download
+Get the latest build directly from the [**Releases**](../../releases) page:
+1. Open the repository's **Releases** tab.
+2. Download the installer/installer bundle.
+3. Run and launch! 
 
-### Para Desenvolvedores
-Se quiser rodar a partir do código-fonte:
+### For Developers
+To run the app from source code:
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone https://github.com/aeeryin/Feathershot.git
 cd feathershot
 
-# Instale as dependências
+# Install dependencies
 npm install
 
-# Execute o app
+# Run the app
 npm start
 ```
 
-## 🛠️ Tecnologias
+## 🛠️ Technology Stack
 
-| Tecnologia | Uso |
+| Technology | Purpose |
 |---|---|
-| **Electron** | Framework desktop multiplataforma |
-| **HTML/CSS/JS** | Interface e lógica do editor |
-| **Canvas API** | Motor de desenho e edição |
-| **Electron Builder** | Empacotamento e distribuição |
+| **Electron** | Cross-platform desktop environment |
+| **HTML/CSS/JS** | User interface, styling, and editor logic |
+| **Canvas API** | Annotation engine and rendering |
+| **Electron Builder** | Packaging and auto-updater distribution |
 
-## 📋 Atalhos
+## 📋 Shortcuts
 
-| Atalho | Ação |
+| Hotkey | Action |
 |---|---|
-| `Ctrl+Shift+S` | Capturar tela (padrão) |
-| `Ctrl+S` | Salvar imagem (no editor) |
-| `Ctrl+C` | Copiar para área de transferência |
-| `Ctrl+Z` | Desfazer |
-| `Ctrl+Y` | Refazer |
+| `Ctrl+Shift+S` | Trigger screen capture (default) |
+| `Ctrl+S` | Save current workspace to disk (in editor) |
+| `Ctrl+C` | Copy workspace to clipboard (in editor) |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` | Redo |
 
-## 🇧🇷 Feito no Brasil
+## 📄 License
 
-Este projeto foi desenvolvido no Brasil com o objetivo de oferecer uma ferramenta de screenshot gratuita, moderna e de alta qualidade para a comunidade. Acreditamos que software livre e bonito pode vir de qualquer lugar — e aqui é a prova! 💚💛
-
-## 📄 Licença
-
-Este projeto está licenciado sob a licença **MIT** — veja o arquivo [LICENSE](LICENSE) para detalhes.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <p align="center">
-  <b>Feathershot</b> — Leve como uma pena, poderoso como um editor profissional. 🪶
+  <b>Feathershot</b> — Light as a feather, powerful as a professional studio. 🪶
 </p>
