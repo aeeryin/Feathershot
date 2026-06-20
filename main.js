@@ -240,17 +240,17 @@ async function captureScreenViaDesktopCapturer() {
   throw new Error('desktopCapturer returned no valid screen source');
 }
 
-// Screenshot: try PowerShell first (reliable on Windows), fallback to desktopCapturer
+// Screenshot: try desktopCapturer first (fast, in-process), fallback to PowerShell
 async function captureScreen() {
   console.log('[Feathershot] Iniciando captura de tela...');
   try {
-    const result = await captureScreenViaPowerShell();
-    console.log('[Feathershot] Captura via PowerShell OK');
+    const result = await captureScreenViaDesktopCapturer();
+    console.log('[Feathershot] Captura via desktopCapturer OK');
     return result;
   } catch (err) {
-    console.warn('[Feathershot] PowerShell falhou, tentando desktopCapturer:', err.message);
+    console.warn('[Feathershot] desktopCapturer falhou, tentando PowerShell:', err.message);
   }
-  return await captureScreenViaDesktopCapturer();
+  return await captureScreenViaPowerShell();
 }
 
 // Capture full screen directly without cropping
@@ -262,7 +262,7 @@ async function captureFullscreenDirectly() {
     if (wasEditorVisible) editorWindow.hide();
     if (wasSettingsVisible) settingsWindow.hide();
 
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 80));
 
     const dataUrl = await captureScreen();
 
@@ -287,7 +287,7 @@ async function triggerScreenCapture() {
     if (wasSettingsVisible) settingsWindow.hide();
     
     // Wait a brief moment for the windows to fully hide
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 80));
     
     const screenshotDataUrl = await captureScreen();
     

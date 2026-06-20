@@ -1,6 +1,6 @@
 {
   "name": "feathershot",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Premium, feature-rich screenshot tool for Windows inspired on Greenshot",
   "main": "main.js",
   "scripts": {
@@ -28,7 +28,8 @@
       {
         "provider": "github",
         "owner": "aeeryin",
-        "repo": "Feathershot"
+        "repo": "Feathershot",
+        "releaseType": "release"
       }
     ],
     "win": {
