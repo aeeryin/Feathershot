@@ -15,6 +15,19 @@ let dpr = window.devicePixelRatio || 1;
 
 let isFrozen = false;
 let croppedRect = null;
+let mouseOnScreen = false;
+
+// Monitor mouse entering and leaving the window boundaries
+window.addEventListener('mouseenter', () => {
+  mouseOnScreen = true;
+  draw();
+});
+
+window.addEventListener('mouseleave', () => {
+  mouseOnScreen = false;
+  magnifier.style.display = 'none';
+  draw();
+});
 
 const quickMenu = document.getElementById('quick-menu');
 const btnEditor = document.getElementById('menu-editor');
@@ -120,6 +133,7 @@ window.addEventListener('mousedown', (e) => {
 
 window.addEventListener('mousemove', (e) => {
   if (isFrozen) return;
+  mouseOnScreen = true;
   currentX = e.clientX;
   currentY = e.clientY;
   
@@ -263,61 +277,63 @@ function draw() {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
   ctx.fillRect(0, 0, width, height);
   
-  // Draw full-screen dotted cyan crosshair lines (intersecting at currentX, currentY)
-  ctx.save();
-  ctx.strokeStyle = '#00e5ff';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([2, 3]); // dotted lines
-  
-  // Horizontal line
-  ctx.beginPath();
-  ctx.moveTo(0, currentY);
-  ctx.lineTo(width, currentY);
-  ctx.stroke();
-  
-  // Vertical line
-  ctx.beginPath();
-  ctx.moveTo(currentX, 0);
-  ctx.lineTo(currentX, height);
-  ctx.stroke();
-  ctx.restore();
+  if (mouseOnScreen) {
+    // Draw full-screen dotted cyan crosshair lines (intersecting at currentX, currentY)
+    ctx.save();
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]); // dotted lines
+    
+    // Horizontal line
+    ctx.beginPath();
+    ctx.moveTo(0, currentY);
+    ctx.lineTo(width, currentY);
+    ctx.stroke();
+    
+    // Vertical line
+    ctx.beginPath();
+    ctx.moveTo(currentX, 0);
+    ctx.lineTo(currentX, height);
+    ctx.stroke();
+    ctx.restore();
 
-  // Draw target crosshair at the cursor
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(currentX, currentY, 8, 0, 2 * Math.PI);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.arc(currentX, currentY, 1.5, 0, 2 * Math.PI);
-  ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  
-  // Draw current coordinate pill next to cursor (e.g. 1032 x 833)
-  const coordText = `${Math.round(currentX)} × ${Math.round(currentY)}`;
-  ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
-  const textW = ctx.measureText(coordText).width;
-  
-  const px = currentX + 12;
-  const py = currentY + 4;
-  
-  // Light mint green background pill
-  ctx.fillStyle = 'rgba(167, 243, 208, 0.9)';
-  ctx.beginPath();
-  ctx.roundRect(px, py, textW + 12, 18, 4);
-  ctx.fill();
-  
-  // Border stroke
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px, py, textW + 12, 18);
-  
-  // Dark green text
-  ctx.fillStyle = '#065f46';
-  ctx.fillText(coordText, px + 6, py + 13);
-  ctx.restore();
+    // Draw target crosshair at the cursor
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(currentX, currentY, 8, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(currentX, currentY, 1.5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    
+    // Draw current coordinate pill next to cursor (e.g. 1032 x 833)
+    const coordText = `${Math.round(currentX)} × ${Math.round(currentY)}`;
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+    const textW = ctx.measureText(coordText).width;
+    
+    const px = currentX + 12;
+    const py = currentY + 4;
+    
+    // Light mint green background pill
+    ctx.fillStyle = 'rgba(167, 243, 208, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(px, py, textW + 12, 18, 4);
+    ctx.fill();
+    
+    // Border stroke
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px, py, textW + 12, 18);
+    
+    // Dark green text
+    ctx.fillStyle = '#065f46';
+    ctx.fillText(coordText, px + 6, py + 13);
+    ctx.restore();
+  }
 
   if (isDragging || isFrozen) {
     const rect = getSelectedRect();
@@ -443,9 +459,12 @@ function updateMagnifier(mouseX, mouseY) {
     magY = mouseY - MAG_SIZE - 15;
   }
   
-  magnifier.style.left = `${magX}px`;
-  magnifier.style.top = `${magY}px`;
-  magnifier.style.display = 'block';
-  
-  magText.textContent = `X: ${Math.round(mouseX)} | Y: ${Math.round(mouseY)}`;
+  if (mouseOnScreen) {
+    magnifier.style.left = `${magX}px`;
+    magnifier.style.top = `${magY}px`;
+    magnifier.style.display = 'block';
+    magText.textContent = `X: ${Math.round(mouseX)} | Y: ${Math.round(mouseY)}`;
+  } else {
+    magnifier.style.display = 'none';
+  }
 }
