@@ -54,6 +54,7 @@ jobs:
       - name: Build & Publish Release
         if: |
           github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-windows') && !contains(github.ref, '-macos') && !contains(github.ref, '-linux')) ||
           (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
           (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
           (matrix.name == 'Linux' && contains(github.ref, '-linux'))
@@ -66,6 +67,7 @@ jobs:
         if: |
           always() && (
           github.event_name == 'workflow_dispatch' ||
+          (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-windows') && !contains(github.ref, '-macos') && !contains(github.ref, '-linux')) ||
           (matrix.name == 'Windows' && contains(github.ref, '-windows')) ||
           (matrix.name == 'macOS' && contains(github.ref, '-macos')) ||
           (matrix.name == 'Linux' && contains(github.ref, '-linux'))

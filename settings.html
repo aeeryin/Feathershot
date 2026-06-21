@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feathershot - Settings</title>
+  <script>
+    (function () {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <link rel="stylesheet" href="settings.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <!-- Custom Titlebar -->
   <div id="titlebar">
@@ -16,7 +24,9 @@
     </div>
     <div class="window-controls">
       <button id="win-close" class="win-btn close">
-        <svg viewBox="0 0 10 10" width="10" height="10"><path d="M0.5 0.5 L9.5 9.5 M9.5 0.5 L0.5 9.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <svg viewBox="0 0 10 10" width="10" height="10">
+          <path d="M0.5 0.5 L9.5 9.5 M9.5 0.5 L0.5 9.5" stroke="currentColor" stroke-width="1.5" />
+        </svg>
       </button>
     </div>
   </div>
@@ -25,10 +35,11 @@
     <!-- Update Banner (hidden by default) -->
     <div id="update-banner" class="update-banner" style="display: none;">
       <div class="update-banner-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
       </div>
       <div class="update-banner-content">
@@ -53,7 +64,8 @@
         <!-- Option Card 1: Capture Action -->
         <div class="setting-card">
           <div class="card-title" id="card-default-action-title">Default Action</div>
-          <div class="card-desc" id="card-default-action-desc">Choose what happens right after you select and crop a screen area.</div>
+          <div class="card-desc" id="card-default-action-desc">Choose what happens right after you select and crop a
+            screen area.</div>
           <div class="radio-group">
             <label class="radio-label">
               <input type="radio" name="default-action" value="editor" checked>
@@ -86,7 +98,7 @@
         <div class="setting-card">
           <div class="card-title" id="card-storage-title">Storage & Naming</div>
           <div class="card-desc" id="card-storage-desc">Setup where screenshots are saved and how files are named.</div>
-          
+
           <div class="setting-field">
             <label class="field-label" id="label-save-folder">Save Folder Path</label>
             <div class="input-row">
@@ -99,13 +111,16 @@
             <div class="setting-field" style="flex: 2;">
               <label class="field-label" id="label-naming-template">File Naming Template</label>
               <input type="text" id="filename-pattern" placeholder="Screenshot_{yyyy}-{month}-{day}">
-              <span class="input-hint" id="naming-hint">Supported tokens: {yyyy}, {month}, {day}, {hour}, {min}, {sec}</span>
+              <span class="input-hint" id="naming-hint">Supported tokens: {yyyy}, {month}, {day}, {hour}, {min},
+                {sec}</span>
             </div>
             <div class="setting-field" style="flex: 1;">
               <label class="field-label" id="label-format">Format</label>
               <select id="format-select">
                 <option value="png" id="format-png">PNG (Lossless)</option>
                 <option value="jpeg" id="format-jpeg">JPEG (Compressed)</option>
+                <option value="webp" id="format-webp">WebP (Modern)</option>
+                <option value="gif" id="format-gif">GIF (Static)</option>
               </select>
             </div>
           </div>
@@ -122,11 +137,17 @@
             <input type="text" id="hotkey-input" placeholder="Press a hotkey..." readonly>
             <button id="btn-record-hotkey" class="secondary-btn">Change Hotkey</button>
             <button id="btn-set-printscreen" class="secondary-btn printscreen-btn" title="Use Print Screen key">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
               PrtSc
             </button>
           </div>
-          <span class="input-hint" id="hotkey-hint">Click "Change Hotkey" to record a combo, or use the PrtSc button to set Print Screen directly.</span>
+          <span class="input-hint" id="hotkey-hint">Click "Change Hotkey" to record a combo, or use the PrtSc button to
+            set Print Screen directly.</span>
         </div>
 
         <!-- Option Card: Language -->
@@ -145,12 +166,14 @@
         <!-- Option Card 3: Editor Behavior -->
         <div class="setting-card">
           <div class="card-title" id="card-editor-behavior-title">Editor Behavior</div>
-          <div class="card-desc" id="card-editor-behavior-desc">Configure how the image editor opens after capture.</div>
+          <div class="card-desc" id="card-editor-behavior-desc">Configure how the image editor opens after capture.
+          </div>
           <div class="toggle-row">
             <label class="toggle-label" for="toggle-maximized">
               <div class="toggle-text">
                 <strong id="toggle-maximized-title">Always open editor maximized</strong>
-                <span id="toggle-maximized-desc">The editor window will always open in fullscreen mode, regardless of the image size.</span>
+                <span id="toggle-maximized-desc">The editor window will always open in fullscreen mode, regardless of
+                  the image size.</span>
               </div>
               <div class="toggle-switch">
                 <input type="checkbox" id="toggle-maximized">
@@ -163,12 +186,14 @@
         <!-- Option Card: Start with system -->
         <div class="setting-card">
           <div class="card-title" id="card-startup-title">Startup</div>
-          <div class="card-desc" id="card-startup-desc">Control whether the application launches automatically when you sign in.</div>
+          <div class="card-desc" id="card-startup-desc">Control whether the application launches automatically when you
+            sign in.</div>
           <div class="toggle-row">
             <label class="toggle-label" for="toggle-startup">
               <div class="toggle-text">
                 <strong id="toggle-startup-title">Start with system</strong>
-                <span id="toggle-startup-desc">Feathershot will run in the system tray automatically when you sign in.</span>
+                <span id="toggle-startup-desc">Feathershot will run in the system tray automatically when you sign
+                  in.</span>
               </div>
               <div class="toggle-switch">
                 <input type="checkbox" id="toggle-startup">
@@ -180,19 +205,16 @@
 
         <!-- Option Card: Theme -->
         <div class="setting-card">
-          <div class="card-title" id="card-theme-title">Theme</div>
-          <div class="card-desc" id="card-theme-desc">Select the theme for the application interface.</div>
-          <div class="toggle-row">
-            <label class="toggle-label" for="toggle-theme">
-              <div class="toggle-text">
-                <strong id="toggle-theme-title">Light Mode</strong>
-                <span id="toggle-theme-desc">Toggle between Dark and Light mode.</span>
-              </div>
-              <div class="toggle-switch">
-                <input type="checkbox" id="toggle-theme">
-                <span class="toggle-slider"></span>
-              </div>
-            </label>
+          <div class="card-title" id="card-theme-title">Interface Theme</div>
+          <div class="card-desc" id="card-theme-desc">Select the appearance theme for the application.</div>
+          <div class="setting-field">
+            <select id="theme-select">
+              <option value="system" id="theme-system">System Default</option>
+              <option value="dark" id="theme-dark">Dark Mode</option>
+              <option value="light" id="theme-light">Light Mode</option>
+              <option value="linux" id="theme-linux">Hyprland</option>
+              <option value="macos" id="theme-macos">MacOS</option>
+            </select>
           </div>
         </div>
       </div>
@@ -207,4 +229,5 @@
 
   <script src="settings.js"></script>
 </body>
+
 </html>

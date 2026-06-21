@@ -1259,12 +1259,55 @@ async function saveToDisk() {
   selectedObject = null;
   draw();
   
-  const dataUrl = canvas.toDataURL('image/png');
-  const success = await window.api.saveToDisk(dataUrl);
+  const formatSelect = document.getElementById('editor-format-select');
+  const selectedFormat = formatSelect ? formatSelect.value : 'png';
+  
+  const { canceled, filePath } = await window.api.showSaveDialog(selectedFormat);
+  if (canceled || !filePath) return;
+  
+  const ext = filePath.split('.').pop().toLowerCase();
+  let success = false;
+  
+  if (ext === 'gif') {
+    const width = canvas.width;
+    const height = canvas.height;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const gifBytes = window.api.encodeGif(imgData.data, width, height);
+    success = await window.api.saveFile(filePath, gifBytes);
+  } else {
+    let mimeType = 'image/png';
+    let quality = 1.0;
+    
+    if (ext === 'jpg' || ext === 'jpeg') {
+      mimeType = 'image/jpeg';
+      quality = 0.92;
+    } else if (ext === 'webp') {
+      mimeType = 'image/webp';
+      quality = 0.92;
+    }
+    
+    const dataUrl = canvas.toDataURL(mimeType, quality);
+    success = await window.api.saveFile(filePath, dataUrl);
+  }
+  
   if (success) {
     showActionNotification('Saved successfully!');
   }
 }
+
+// Initialize format select element to settings format
+async function initFormatSelect() {
+  try {
+    const currentSettings = await window.api.getSettings();
+    const formatSelect = document.getElementById('editor-format-select');
+    if (formatSelect) {
+      formatSelect.value = currentSettings.imageFormat || 'png';
+    }
+  } catch (err) {
+    console.error('Failed to load format select settings:', err);
+  }
+}
+initFormatSelect();
 
 function showActionNotification(msg) {
   const notif = document.createElement('div');

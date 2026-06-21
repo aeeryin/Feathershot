@@ -12,7 +12,7 @@ const formatSelect = document.getElementById('format-select');
 const languageSelect = document.getElementById('language-select');
 const btnSave = document.getElementById('btn-save-settings');
 const btnCancel = document.getElementById('btn-cancel-settings');
-const toggleTheme = document.getElementById('toggle-theme');
+const themeSelect = document.getElementById('theme-select');
 
 // Update banner elements
 const updateBanner = document.getElementById('update-banner');
@@ -64,10 +64,15 @@ const settingsTranslations = {
     'label-format': 'Format',
     'format-png': 'PNG (Lossless)',
     'format-jpeg': 'JPEG (Compressed)',
+    'format-webp': 'WebP (Modern)',
+    'format-gif': 'GIF (Static)',
     'card-theme-title': 'Interface Theme',
     'card-theme-desc': 'Select the appearance theme for the application.',
-    'toggle-theme-title': 'Light Mode',
-    'toggle-theme-desc': 'Toggle between Dark and Light interface themes.',
+    'theme-system': 'System Default',
+    'theme-dark': 'Dark Mode',
+    'theme-light': 'Light Mode',
+    'theme-linux': 'Hyprland',
+    'theme-macos': 'MacOS',
     'btn-save-settings': 'Save Configurations',
     'btn-cancel-settings': 'Cancel'
   },
@@ -108,10 +113,15 @@ const settingsTranslations = {
     'label-format': 'Formato',
     'format-png': 'PNG (Sem Perdas)',
     'format-jpeg': 'JPEG (Compactado)',
+    'format-webp': 'WebP (Moderno)',
+    'format-gif': 'GIF (Estático)',
     'card-theme-title': 'Tema da Interface',
     'card-theme-desc': 'Selecione o tema de aparência para o aplicativo.',
-    'toggle-theme-title': 'Modo Claro',
-    'toggle-theme-desc': 'Alternar entre os temas de interface Escuro e Claro.',
+    'theme-system': 'Padrão do Sistema',
+    'theme-dark': 'Modo Escuro',
+    'theme-light': 'Modo Claro',
+    'theme-linux': 'Hyprland',
+    'theme-macos': 'MacOS',
     'btn-save-settings': 'Salvar Configurações',
     'btn-cancel-settings': 'Cancelar'
   }
@@ -148,23 +158,23 @@ let isRecordingHotkey = false;
 // Initialize Settings
 async function initSettings() {
   currentSettings = await window.api.getSettings();
-  
+
   // Apply resolved translations
   applyTranslations(currentSettings.resolvedLanguage || 'en');
-  
+
   // Populate default actions radio
   const radio = document.querySelector(`input[name="default-action"][value="${currentSettings.defaultAction}"]`);
   if (radio) {
     radio.checked = true;
   }
-  
+
   // Populate inputs
   hotkeyInput.value = currentSettings.shortcut;
   folderInput.value = currentSettings.saveFolder;
   filenamePatternInput.value = currentSettings.fileNamePattern;
   formatSelect.value = currentSettings.imageFormat;
   languageSelect.value = currentSettings.language || 'auto';
-  
+
   // Populate toggles
   toggleMaximized.checked = currentSettings.alwaysMaximized || false;
   toggleStartup.checked = currentSettings.startAtLogin || currentSettings.startWithWindows || false;
@@ -177,9 +187,9 @@ async function initSettings() {
       startupDesc.textContent = t['toggle-startup-unsupported-desc'];
     }
   }
-  
-  // Populate theme toggle
-  toggleTheme.checked = currentSettings.theme === 'light';
+
+  // Populate theme select
+  themeSelect.value = currentSettings.theme || 'dark';
   document.documentElement.setAttribute('data-theme', currentSettings.theme || 'dark');
 
   // Show update banner if an update is already known
@@ -213,10 +223,10 @@ printScreenBtn.addEventListener('click', () => {
     recordBtn.textContent = 'Change Hotkey';
     hotkeyInput.classList.remove('recording');
   }
-  
+
   hotkeyInput.value = 'PrintScreen';
   currentSettings.shortcut = 'PrintScreen';
-  
+
   // Visual feedback
   printScreenBtn.style.backgroundColor = 'rgba(19, 190, 158, 0.2)';
   setTimeout(() => {
@@ -242,10 +252,10 @@ hotkeyInput.addEventListener('click', () => recordBtn.click());
 
 window.addEventListener('keydown', (e) => {
   if (!isRecordingHotkey) return;
-  
+
   e.preventDefault();
   e.stopPropagation();
-  
+
   if (e.key === 'Escape') {
     isRecordingHotkey = false;
     recordBtn.textContent = 'Change Hotkey';
@@ -253,18 +263,18 @@ window.addEventListener('keydown', (e) => {
     hotkeyInput.classList.remove('recording');
     return;
   }
-  
+
   const keys = [];
   if (e.ctrlKey || e.metaKey) keys.push('CommandOrControl');
   if (e.shiftKey) keys.push('Shift');
   if (e.altKey) keys.push('Alt');
-  
+
   const keyName = e.key;
   if (['Control', 'Shift', 'Alt', 'Meta'].includes(keyName)) {
     // Just modifiers pressed, wait for base key
     return;
   }
-  
+
   let baseKey = keyName;
   if (keyName === ' ') baseKey = 'Space';
   else if (keyName === 'ArrowUp') baseKey = 'Up';
@@ -280,17 +290,17 @@ window.addEventListener('keydown', (e) => {
   else if (keyName === 'End') baseKey = 'End';
   else if (keyName.startsWith('F') && keyName.length > 1 && !isNaN(keyName.substring(1))) baseKey = keyName; // F1-F12
   else if (keyName.length === 1) baseKey = keyName.toUpperCase();
-  
+
   // Allow PrintScreen as standalone key, or any special key, or modified key
   const hasModifier = e.ctrlKey || e.shiftKey || e.altKey || e.metaKey;
   const isSpecialKey = baseKey.length > 1;
   if (!hasModifier && !isSpecialKey) {
     return; // Ignore single letter keys without modifiers
   }
-  
+
   keys.push(baseKey);
   const shortcutString = keys.join('+');
-  
+
   hotkeyInput.value = shortcutString;
   currentSettings.shortcut = shortcutString;
   isRecordingHotkey = false;
@@ -301,7 +311,7 @@ window.addEventListener('keydown', (e) => {
 // Save Settings Action
 btnSave.addEventListener('click', async () => {
   const selectedAction = document.querySelector('input[name="default-action"]:checked').value;
-  
+
   const newSettings = {
     shortcut: hotkeyInput.value,
     defaultAction: selectedAction,
@@ -311,16 +321,16 @@ btnSave.addEventListener('click', async () => {
     alwaysMaximized: toggleMaximized.checked,
     startAtLogin: toggleStartup.checked,
     language: languageSelect.value,
-    theme: toggleTheme.checked ? 'light' : 'dark'
+    theme: themeSelect.value
   };
-  
+
   await window.api.saveSettings(newSettings);
   window.api.closeWindow();
 });
 
-// Real-time Theme Toggle Listener
-toggleTheme.addEventListener('change', () => {
-  const theme = toggleTheme.checked ? 'light' : 'dark';
+// Real-time Theme Selection Listener
+themeSelect.addEventListener('change', () => {
+  const theme = themeSelect.value;
   document.documentElement.setAttribute('data-theme', theme);
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "feathershot",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Premium, feature-rich cross-platform screenshot tool inspired by Greenshot",
   "main": "main.js",
   "scripts": {
@@ -119,7 +119,8 @@
     }
   },
   "dependencies": {
-    "electron-updater": "^6.8.9"
+    "electron-updater": "^6.8.9",
+    "gifenc": "^1.0.3"
   },
   "devDependencies": {
     "electron": "^31.1.0",

@@ -1,4 +1,4 @@
-﻿* {
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -124,9 +124,9 @@ body, html {
 /* Quick Menu styles */
 #quick-menu {
   position: absolute;
-  background: rgba(20, 20, 22, 0.85);
+  background: var(--bg-quickmenu, rgba(20, 20, 22, 0.85));
   backdrop-filter: blur(16px) saturate(1.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-quickmenu, rgba(255, 255, 255, 0.12));
   border-radius: 8px;
   padding: 6px;
   display: flex;
@@ -141,7 +141,7 @@ body, html {
   background: transparent;
   border: none;
   outline: none;
-  color: #e3e3e6;
+  color: var(--text-menuitem, #e3e3e6);
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -161,6 +161,11 @@ body, html {
   color: #ffffff;
 }
 
+[data-theme="light"] .menu-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
+}
+
 .menu-item:active {
   background: rgba(255, 255, 255, 0.12);
   transform: scale(0.98);
@@ -168,5 +173,39 @@ body, html {
 
 .menu-item svg {
   flex-shrink: 0;
-  color: #00e5ff; /* duotone vector color theme */
+  color: var(--accent-menuitem, #00e5ff); /* duotone vector color theme */
+}
+
+/* Light Theme overrides */
+[data-theme="light"] {
+  --bg-quickmenu: rgba(245, 245, 247, 0.9);
+  --border-quickmenu: rgba(0, 0, 0, 0.1);
+  --text-menuitem: #1d1d1f;
+  --accent-menuitem: #13BE9E;
+}
+
+/* Linux (Hyprland) Theme Overrides */
+[data-theme="linux"] {
+  --bg-quickmenu: rgba(24, 24, 37, 0.9);
+  --border-quickmenu: #313244;
+  --text-menuitem: #cdd6f4;
+  --accent-menuitem: #f5c2e7;
+}
+
+/* MacOS Theme Overrides */
+[data-theme="macos"] {
+  --bg-quickmenu: rgba(30, 30, 30, 0.9);
+  --border-quickmenu: rgba(255, 255, 255, 0.08);
+  --text-menuitem: #eaeaea;
+  --accent-menuitem: #007aff;
+}
+
+/* System Theme (Media Queries) */
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    --bg-quickmenu: rgba(245, 245, 247, 0.9);
+    --border-quickmenu: rgba(0, 0, 0, 0.1);
+    --text-menuitem: #1d1d1f;
+    --accent-menuitem: #13BE9E;
+  }
 }

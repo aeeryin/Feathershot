@@ -16,11 +16,23 @@ contextBridge.exposeInMainWorld('api', {
   onHideMagnifier: (callback) => ipcRenderer.on('hide-magnifier', () => callback()),
   sendCropperEvent: (data) => ipcRenderer.send('cropper-event', data),
   onCropperSync: (callback) => ipcRenderer.on('cropper-sync', (event, data) => callback(data)),
+  sendCropperReady: () => ipcRenderer.send('cropper-ready'),
 
   // Editor specific APIs
   onOpenImage: (callback) => ipcRenderer.on('open-image', (event, dataUrl, lang) => callback(dataUrl, lang)),
   copyToClipboard: (dataUrl) => ipcRenderer.invoke('copy-to-clipboard', dataUrl),
   saveToDisk: (dataUrl, defaultName) => ipcRenderer.invoke('save-to-disk', dataUrl, defaultName),
+  showSaveDialog: (selectedFormat) => ipcRenderer.invoke('show-save-dialog', selectedFormat),
+  saveFile: (filePath, data) => ipcRenderer.invoke('save-file', filePath, data),
+  encodeGif: (pixelData, width, height) => {
+    const { GIFEncoder, quantize, applyPalette } = require('gifenc');
+    const palette = quantize(pixelData, 256);
+    const index = applyPalette(pixelData, palette);
+    const gif = GIFEncoder();
+    gif.writeFrame(index, width, height, { palette });
+    gif.finish();
+    return gif.bytes();
+  },
   closeEditor: () => ipcRenderer.send('close-editor'),
 
   // Settings APIs
@@ -34,3 +46,4 @@ contextBridge.exposeInMainWorld('api', {
   onUpdateStatus: (callback) => ipcRenderer.on('update-status', (event, data) => callback(data)),
   sendUpdateAction: (action) => ipcRenderer.send('update-action', action)
 });
+

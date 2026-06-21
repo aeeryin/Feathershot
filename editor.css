@@ -529,3 +529,251 @@ input:checked + .toggle-slider:before {
   color: #1d1d1f;
 }
 
+/* Linux (Hyprland) Theme Overrides */
+[data-theme="linux"] {
+  --bg-main: #11111b;
+  --bg-sidebar: #181825;
+  --bg-workspace: #1e1e2e;
+  --bg-titlebar: #11111b;
+  --border-color: #313244;
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
+  --accent-color: #f5c2e7;
+  --accent-hover: #f38ba8;
+  --success-color: #a6e3a1;
+  --danger-color: #f38ba8;
+}
+
+[data-theme="linux"] .win-btn:hover {
+  background-color: rgba(245, 194, 231, 0.15);
+}
+
+[data-theme="linux"] .tool-btn.active {
+  background-color: rgba(245, 194, 231, 0.15);
+  border-color: rgba(245, 194, 231, 0.3);
+  color: #f5c2e7;
+}
+
+[data-theme="linux"] .tool-btn.active svg {
+  color: #f5c2e7;
+}
+
+[data-theme="linux"] .action-btn.primary {
+  background-color: #f5c2e7;
+  color: #11111b;
+}
+
+[data-theme="linux"] .action-btn.primary:hover {
+  background-color: #f38ba8;
+}
+
+/* MacOS Theme Overrides */
+[data-theme="macos"] {
+  --bg-main: #1e1e1e;
+  --bg-sidebar: #252525;
+  --bg-workspace: #2d2d2d;
+  --bg-titlebar: #1e1e1e;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #eaeaea;
+  --text-secondary: #909090;
+  --accent-color: #007aff;
+  --accent-hover: #0062cc;
+}
+
+/* MacOS Titlebar Layout (Controls on Left) */
+[data-theme="macos"] #titlebar {
+  flex-direction: row-reverse;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+[data-theme="macos"] .title-left {
+  flex-direction: row-reverse;
+}
+
+[data-theme="macos"] .window-controls {
+  flex-direction: row; /* Close, Minimize, Maximize in order */
+  gap: 8px;
+  align-items: center;
+}
+
+[data-theme="macos"] .win-btn {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 50%;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+[data-theme="macos"] .win-btn svg {
+  display: none !important;
+}
+
+[data-theme="macos"] #win-close {
+  background-color: #ff5f56 !important;
+  border: 0.5px solid #e0443e !important;
+}
+
+[data-theme="macos"] #win-min {
+  background-color: #ffbd2e !important;
+  border: 0.5px solid #dfa224 !important;
+}
+
+[data-theme="macos"] #win-max {
+  background-color: #27c93f !important;
+  border: 0.5px solid #1aab29 !important;
+}
+
+[data-theme="macos"] .win-btn:hover {
+  opacity: 0.8;
+}
+
+[data-theme="macos"] .tool-btn.active {
+  background-color: rgba(0, 122, 255, 0.15);
+  border-color: rgba(0, 122, 255, 0.3);
+  color: #007aff;
+}
+
+[data-theme="macos"] .tool-btn.active svg {
+  color: #007aff;
+}
+
+[data-theme="macos"] .action-btn.primary {
+  background-color: #007aff;
+}
+
+[data-theme="macos"] .action-btn.primary:hover {
+  background-color: #0062cc;
+}
+
+/* System Theme (Media Queries) */
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    --bg-main: #f5f5f7;
+    --bg-sidebar: #eaeaea;
+    --bg-workspace: #e5e5ea;
+    --bg-titlebar: #eaeaea;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent-color: #13BE9E;
+    --accent-hover: #0fa386;
+  }
+  
+  [data-theme="system"] .action-btn {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    color: var(--text-primary);
+  }
+  
+  [data-theme="system"] .action-btn:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  [data-theme="system"] .tool-btn {
+    color: var(--text-primary);
+  }
+  
+  [data-theme="system"] .tool-btn:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  [data-theme="system"] .tool-btn.active {
+    background-color: rgba(19, 190, 158, 0.15);
+    border-color: rgba(19, 190, 158, 0.3);
+    color: #0fa386;
+  }
+  
+  [data-theme="system"] .tool-btn.active svg {
+    color: #0fa386;
+  }
+  
+  [data-theme="system"] .win-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  [data-theme="system"] #canvas-textarea {
+    color: #1d1d1f;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --bg-main: #121214;
+    --bg-sidebar: #1a1a1e;
+    --bg-workspace: #282830;
+    --bg-titlebar: #18181c;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #f5f5f7;
+    --text-secondary: #8e8e93;
+    --accent-color: #13BE9E;
+    --accent-hover: #0fa386;
+  }
+}
+
+/* Custom Format Select Dropdown styling */
+.action-select {
+  background: var(--bg-titlebar);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.action-select option {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.action-select:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="light"] .action-select {
+  background-color: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .action-select:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="linux"] .action-select {
+  background-color: #181825;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+}
+
+[data-theme="linux"] .action-select:hover {
+  background-color: rgba(245, 194, 231, 0.15);
+  border-color: rgba(245, 194, 231, 0.3);
+}
+
+[data-theme="macos"] .action-select {
+  background-color: #2d2d2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #eaeaea;
+}
+
+[data-theme="macos"] .action-select:hover {
+  opacity: 0.8;
+}
+
+

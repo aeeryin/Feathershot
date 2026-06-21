@@ -678,3 +678,182 @@ select {
 [data-theme="light"] .win-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
+
+/* Linux (Hyprland) Theme Overrides */
+[data-theme="linux"] {
+  --bg-main: #11111b;
+  --bg-card: #181825;
+  --bg-titlebar: #11111b;
+  --border-color: #313244;
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
+  --accent-color: #f5c2e7;
+  --accent-hover: #f38ba8;
+}
+
+[data-theme="linux"] select,
+[data-theme="linux"] input[type="text"] {
+  background-color: #1e1e2e;
+  border: 1px solid #313244;
+  color: #cdd6f4;
+}
+
+[data-theme="linux"] select:focus,
+[data-theme="linux"] input[type="text"]:focus {
+  border-color: #f5c2e7;
+}
+
+[data-theme="linux"] .win-btn:hover {
+  background-color: rgba(245, 194, 231, 0.15);
+}
+
+[data-theme="linux"] .primary-btn {
+  background-color: #f5c2e7;
+  color: #11111b;
+}
+
+[data-theme="linux"] .primary-btn:hover {
+  background-color: #f38ba8;
+}
+
+[data-theme="linux"] .secondary-btn:hover {
+  background-color: rgba(245, 194, 231, 0.15);
+  border-color: rgba(245, 194, 231, 0.3);
+}
+
+/* MacOS Theme Overrides */
+[data-theme="macos"] {
+  --bg-main: #1e1e1e;
+  --bg-card: #252525;
+  --bg-titlebar: #1e1e1e;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #eaeaea;
+  --text-secondary: #909090;
+  --accent-color: #007aff;
+  --accent-hover: #0062cc;
+}
+
+/* MacOS Titlebar Layout (Controls on Left) */
+[data-theme="macos"] #titlebar {
+  flex-direction: row-reverse;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+[data-theme="macos"] .title-left {
+  flex-direction: row-reverse;
+}
+
+[data-theme="macos"] .window-controls {
+  flex-direction: row; /* Close in order */
+  gap: 8px;
+  align-items: center;
+}
+
+[data-theme="macos"] .win-btn {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  min-height: 12px;
+  border-radius: 50%;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+[data-theme="macos"] .win-btn svg {
+  display: none !important;
+}
+
+[data-theme="macos"] #win-close {
+  background-color: #ff5f56 !important;
+  border: 0.5px solid #e0443e !important;
+}
+
+[data-theme="macos"] .win-btn:hover {
+  opacity: 0.8;
+}
+
+[data-theme="macos"] select,
+[data-theme="macos"] input[type="text"] {
+  background-color: #2d2d2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #eaeaea;
+}
+
+[data-theme="macos"] select:focus,
+[data-theme="macos"] input[type="text"]:focus {
+  border-color: #007aff;
+}
+
+[data-theme="macos"] .primary-btn {
+  background-color: #007aff;
+}
+
+[data-theme="macos"] .primary-btn:hover {
+  background-color: #0062cc;
+}
+
+/* System Theme (Media Queries) */
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    --bg-main: #f5f5f7;
+    --bg-card: #ffffff;
+    --bg-titlebar: #eaeaea;
+    --border-color: rgba(0, 0, 0, 0.1);
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent-color: #13BE9E;
+    --accent-hover: #0fa386;
+  }
+  
+  [data-theme="system"] select,
+  [data-theme="system"] input[type="text"] {
+    background-color: #f5f5f7;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
+  
+  [data-theme="system"] select:focus,
+  [data-theme="system"] input[type="text"]:focus {
+    border-color: var(--accent-color);
+  }
+  
+  [data-theme="system"] .toggle-slider {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  [data-theme="system"] .toggle-slider::before {
+    background-color: #86868b;
+  }
+  
+  [data-theme="system"] .toggle-switch input:checked + .toggle-slider::before {
+    background-color: white;
+  }
+  
+  [data-theme="system"] .secondary-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+  
+  [data-theme="system"] .win-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    --bg-main: #121214;
+    --bg-card: #1c1c21;
+    --bg-titlebar: #18181c;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #f5f5f7;
+    --text-secondary: #8e8e93;
+    --accent-color: #13BE9E;
+    --accent-hover: #0fa386;
+  }
+}

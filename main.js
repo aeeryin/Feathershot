@@ -1,4 +1,11 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, clipboard, nativeImage, dialog, screen, Tray, Menu, desktopCapturer } = require('electron');
+
+// Single Instance Lock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+}
+
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -109,6 +116,20 @@ let settingsWindow = null;
 let updateWindow = null;
 let updateVersion = null;
 let tray = null;
+let isQuitting = false;
+
+let restoreSettingsAfterCrop = false;
+let restoreEditorAfterCrop = false;
+
+if (gotTheLock) {
+  app.on('second-instance', () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      if (settingsWindow.isMinimized()) settingsWindow.restore();
+      settingsWindow.show();
+      settingsWindow.focus();
+    }
+  });
+}
 
 // App Icon Path (main.png as requested)
 const APP_ICON_PATH = path.join(__dirname, 'main.png');
@@ -139,7 +160,10 @@ function createTray() {
       }},
       { label: 'Settings', click: () => openSettingsWindow() },
       { type: 'separator' },
-      { label: 'Quit', click: () => app.quit() }
+      { label: 'Quit', click: () => {
+        isQuitting = true;
+        app.quit();
+      }}
     ]);
     
     tray.setContextMenu(contextMenu);
@@ -151,15 +175,13 @@ function createTray() {
   }
 }
 
+let hasShownShortcutConflict = false;
+
 // Global hotkeys register
 function registerShortcuts() {
   globalShortcut.unregisterAll();
   
-  // Register screen capture shortcut
   let shortcutString = settings.shortcut || DEFAULT_SHORTCUT;
-  if (shortcutString === 'PrintScreen') {
-    shortcutString = 'PrintScreen';
-  }
   
   try {
     const registered = globalShortcut.register(shortcutString, () => {
@@ -167,6 +189,42 @@ function registerShortcuts() {
     });
     if (!registered) {
       console.warn(`Failed to register global shortcut: ${shortcutString}`);
+      
+      if (shortcutString === 'PrintScreen') {
+        const fallbackRegistered = globalShortcut.register(DEFAULT_SHORTCUT, () => {
+          triggerScreenCapture();
+        });
+        if (fallbackRegistered && !hasShownShortcutConflict) {
+          hasShownShortcutConflict = true;
+          const lang = getResolvedLanguage();
+          const title = lang === 'pt' ? 'Feathershot - Atalho em Conflito' : 'Feathershot - Shortcut Conflict';
+          const message = lang === 'pt' 
+            ? 'Não foi possível registrar a tecla PrintScreen.' 
+            : 'Could not register the PrintScreen key.';
+          const detail = lang === 'pt'
+            ? `O Windows ou outro aplicativo está usando a tecla PrintScreen. O Feathershot usará o atalho alternativo: Ctrl+Shift+S.\n\nPara liberar a tecla PrintScreen:\n1. Abra as Configurações do Windows.\n2. Vá em Acessibilidade > Teclado.\n3. Desative a opção "Usar o botão Print screen para abrir a captura de tela".`
+            : `Windows or another application is using the PrintScreen key. Feathershot will use the fallback shortcut: Ctrl+Shift+S.\n\nTo free up the PrintScreen key:\n1. Open Windows Settings.\n2. Go to Accessibility > Keyboard.\n3. Turn off "Use the Print screen key to open screen capture".`;
+          
+          const showDialog = () => {
+            dialog.showMessageBox({
+              type: 'warning',
+              title,
+              message,
+              detail,
+              buttons: ['OK']
+            });
+          };
+          if (app.isReady()) {
+            showDialog();
+          } else {
+            app.whenReady().then(showDialog);
+          }
+        }
+      } else {
+        globalShortcut.register(DEFAULT_SHORTCUT, () => {
+          triggerScreenCapture();
+        });
+      }
     }
   } catch (err) {
     console.error('Shortcut registration error:', err);
@@ -359,11 +417,14 @@ async function triggerScreenCapture() {
     const wasEditorVisible = editorWindow && !editorWindow.isDestroyed() && editorWindow.isVisible();
     const wasSettingsVisible = settingsWindow && !settingsWindow.isDestroyed() && settingsWindow.isVisible();
     
+    restoreEditorAfterCrop = wasEditorVisible;
+    restoreSettingsAfterCrop = wasSettingsVisible;
+    
     if (wasEditorVisible) editorWindow.hide();
     if (wasSettingsVisible) settingsWindow.hide();
     
     // Wait a brief moment for the windows to fully hide
-    await new Promise(resolve => setTimeout(resolve, 80));
+    await new Promise(resolve => setTimeout(resolve, 250));
     
     // Close any existing croppers first
     closeAllCroppers();
@@ -388,14 +449,18 @@ async function triggerScreenCapture() {
       throw new Error('Could not capture any screen');
     }
     
-    // Restore windows
-    if (wasEditorVisible) editorWindow.show();
-    if (wasSettingsVisible) settingsWindow.show();
-    
     // Cria uma janela por monitor com dados compostos para suporte a drag entre monitores
     cropperWindows = createCropperWindows(validScreenshots);
   } catch (err) {
     console.error('Failed to trigger capture:', err);
+    
+    // Restore windows immediately if trigger failed
+    if (restoreEditorAfterCrop && editorWindow && !editorWindow.isDestroyed()) editorWindow.show();
+    if (restoreSettingsAfterCrop && settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.show();
+    
+    restoreEditorAfterCrop = false;
+    restoreSettingsAfterCrop = false;
+    
     dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
   }
 }
@@ -415,16 +480,19 @@ function handleScreenshotResult(dataUrl, width, height) {
       buttons: ['OK']
     });
   } else if (settings.defaultAction === 'save') {
-    const buffer = Buffer.from(dataUrl.split(',')[1], 'base64');
     const fileName = generateFileName();
     const savePath = path.join(settings.saveFolder, fileName);
     
-    fs.writeFileSync(savePath, buffer);
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'Feathershot',
-      message: `Screenshot saved directly to:\n${savePath}`,
-      buttons: ['OK']
+    convertPngToFormat(dataUrl, settings.imageFormat).then(buffer => {
+      fs.writeFileSync(savePath, buffer);
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Feathershot',
+        message: `Screenshot saved directly to:\n${savePath}`,
+        buttons: ['OK']
+      });
+    }).catch(err => {
+      console.error('Failed to convert screenshot for direct save:', err);
     });
   }
 }
@@ -465,10 +533,13 @@ function createCropperWindows(validScreenshots) {
       width: display.bounds.width,
       height: display.bounds.height,
       frame: false,
-      transparent: true,
+      transparent: false,
+      backgroundColor: '#000000',
       alwaysOnTop: true,
       fullscreen: false,
       resizable: false,
+      show: false, // Start hidden to prevent click-through before ready
+      focusable: true,
       skipTaskbar: true,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
@@ -478,7 +549,8 @@ function createCropperWindows(validScreenshots) {
       }
     });
     
-    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setAlwaysOnTop(true, 'screen-saver', 1);
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     win.loadFile('cropper.html');
     
     // This window's offset within the virtual desktop
@@ -493,7 +565,8 @@ function createCropperWindows(validScreenshots) {
           displayCaptures,
           displayOffset,
           displaySize: { width: display.bounds.width, height: display.bounds.height },
-          totalSize: { width: totalWidth, height: totalHeight }
+          totalSize: { width: totalWidth, height: totalHeight },
+          theme: settings.theme
         }, getResolvedLanguage());
       }
     });
@@ -539,15 +612,13 @@ function openEditorWindow(dataUrl, width, height) {
   const displayWidth = activeDisplay.workArea.width;
   const displayHeight = activeDisplay.workArea.height;
   
-  let maximize = settings.alwaysMaximized || false;
+  // Force maximized/fullscreen by default as requested
+  let maximize = true;
   
   // If window size bounds exceed screen bounds, scale down window size
   if (winWidth >= displayWidth || winHeight >= displayHeight) {
     winWidth = Math.min(winWidth, displayWidth - 40);
     winHeight = Math.min(winHeight, displayHeight - 40);
-    if ((width && width > displayWidth * 0.8) || (height && height > displayHeight * 0.8)) {
-      maximize = true;
-    }
   }
 
   // Center editor on the active screen
@@ -563,7 +634,7 @@ function openEditorWindow(dataUrl, width, height) {
     height: Math.round(winHeight),
     minWidth: 800,
     minHeight: 600,
-    resizable: false,
+    resizable: true, // MUST be resizable to allow maximization on Windows
     icon: icon,
     frame: false, // Frameless window for beautiful custom title bar
     show: false,
@@ -592,11 +663,17 @@ function openEditorWindow(dataUrl, width, height) {
 }
 
 function openSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    return;
+  }
+
   const icon = nativeImage.createFromPath(APP_ICON_PATH);
 
   settingsWindow = new BrowserWindow({
-    width: 900,
-    height: 530,
+    width: 1120,
+    height: 550,
     resizable: false,
     icon: icon,
     frame: false, // Frameless for a premium styled view
@@ -616,8 +693,13 @@ function openSettingsWindow() {
     settingsWindow.show();
   });
   
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
+  settingsWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      settingsWindow.hide();
+    } else {
+      settingsWindow = null;
+    }
   });
 }
 
@@ -759,6 +841,7 @@ if (IS_WINDOWS) {
 
 // Electron Application Lifecycle
 app.whenReady().then(() => {
+  if (!gotTheLock) return;
   loadSettings();
   applyAutoLaunch();
   createTray();
@@ -812,11 +895,39 @@ ipcMain.on('window-control', (event, action) => {
 
 ipcMain.on('crop-completed', (event, croppedDataUrl, width, height) => {
   closeAllCroppers();
+  
+  // Restore settings if it was open before crop
+  if (restoreSettingsAfterCrop && settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+  }
+  
+  restoreEditorAfterCrop = false;
+  restoreSettingsAfterCrop = false;
+  
   handleScreenshotResult(croppedDataUrl, width, height);
 });
 
 ipcMain.on('cancel-crop', () => {
   closeAllCroppers();
+  
+  // Restore settings and/or editor if they were open before crop
+  if (restoreEditorAfterCrop && editorWindow && !editorWindow.isDestroyed()) {
+    editorWindow.show();
+  }
+  if (restoreSettingsAfterCrop && settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+  }
+  
+  restoreEditorAfterCrop = false;
+  restoreSettingsAfterCrop = false;
+});
+
+ipcMain.on('cropper-ready', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && !win.isDestroyed()) {
+    win.show();
+    win.focus();
+  }
 });
 
 ipcMain.on('report-mouse-active', (event) => {
@@ -894,6 +1005,7 @@ ipcMain.handle('get-settings', () => {
 
 ipcMain.handle('save-settings', (event, newSettings) => {
   saveSettings(newSettings);
+  hasShownShortcutConflict = false; // Reset to allow showing warning again if new settings fail
   registerShortcuts(); // Re-register shortcut if it changed
   
   // Notify other windows of settings change
@@ -904,6 +1016,115 @@ ipcMain.handle('save-settings', (event, newSettings) => {
   });
   
   return settings;
+});
+
+// Helper for converting images to target format offscreen
+async function convertPngToFormat(pngDataUrl, targetFormat) {
+  if (targetFormat === 'png') {
+    return Buffer.from(pngDataUrl.split(',')[1], 'base64');
+  }
+  
+  const workerWin = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+  
+  await workerWin.loadURL('about:blank');
+  
+  try {
+    if (targetFormat === 'gif') {
+      const result = await workerWin.webContents.executeJavaScript(`
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, img.width, img.height);
+            resolve({
+              pixels: Array.from(imgData.data),
+              width: img.width,
+              height: img.height
+            });
+          };
+          img.src = ${JSON.stringify(pngDataUrl)};
+        });
+      `);
+      
+      const { GIFEncoder, quantize, applyPalette } = require('gifenc');
+      const pixelArray = Uint8Array.from(result.pixels);
+      const palette = quantize(pixelArray, 256);
+      const index = applyPalette(pixelArray, palette);
+      const gif = GIFEncoder();
+      gif.writeFrame(index, result.width, result.height, { palette });
+      gif.finish();
+      return Buffer.from(gif.bytes());
+    } else {
+      const mime = targetFormat === 'jpeg' || targetFormat === 'jpg' ? 'image/jpeg' : 'image/webp';
+      const resultDataUrl = await workerWin.webContents.executeJavaScript(`
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve(canvas.toDataURL('${mime}', 0.92));
+          };
+          img.src = ${JSON.stringify(pngDataUrl)};
+        });
+      `);
+      return Buffer.from(resultDataUrl.split(',')[1], 'base64');
+    }
+  } finally {
+    workerWin.destroy();
+  }
+}
+
+ipcMain.handle('show-save-dialog', async (event, selectedFormat) => {
+  const format = selectedFormat || settings.imageFormat;
+  const name = generateFileName();
+  const nameWithCorrectExt = name.substring(0, name.lastIndexOf('.')) + '.' + format;
+  const defaultPath = path.join(settings.saveFolder, nameWithCorrectExt);
+  
+  const allFilters = [
+    { name: 'PNG Image (*.png)', extensions: ['png'] },
+    { name: 'JPEG Image (*.jpg; *.jpeg)', extensions: ['jpg', 'jpeg'] },
+    { name: 'WebP Image (*.webp)', extensions: ['webp'] },
+    { name: 'GIF Image (*.gif)', extensions: ['gif'] }
+  ];
+  
+  const activeFilter = allFilters.find(f => f.extensions.includes(format));
+  const otherFilters = allFilters.filter(f => !f.extensions.includes(format));
+  const filters = [activeFilter, ...otherFilters].filter(Boolean);
+
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    defaultPath,
+    filters
+  });
+  return { canceled, filePath };
+});
+
+ipcMain.handle('save-file', async (event, filePath, data) => {
+  try {
+    let buffer;
+    if (typeof data === 'string' && data.startsWith('data:')) {
+      buffer = Buffer.from(data.split(',')[1], 'base64');
+    } else {
+      buffer = Buffer.from(data);
+    }
+    fs.writeFileSync(filePath, buffer);
+    return true;
+  } catch (err) {
+    console.error('Failed to write file:', err);
+    return false;
+  }
 });
 
 ipcMain.handle('select-folder', async () => {

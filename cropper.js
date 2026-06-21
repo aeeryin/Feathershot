@@ -87,6 +87,9 @@ function applyTranslations(lang) {
 // data = { displayCaptures: [...], displayOffset, displaySize, totalSize }
 window.api.onCaptureImage((data, lang) => {
   applyTranslations(lang || 'en');
+  if (data.theme) {
+    document.documentElement.setAttribute('data-theme', data.theme);
+  }
 
   displayOffset = data.displayOffset;
   displayWidth = data.displaySize.width;
@@ -110,6 +113,7 @@ window.api.onCaptureImage((data, lang) => {
         compositeReady = true;
         resizeCanvas();
         draw();
+        window.api.sendCropperReady();
       }
     };
     img.onerror = () => {
@@ -118,6 +122,7 @@ window.api.onCaptureImage((data, lang) => {
         compositeReady = true;
         resizeCanvas();
         draw();
+        window.api.sendCropperReady();
       }
     };
     img.src = capture.url;

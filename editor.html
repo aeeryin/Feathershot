@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feathershot - Editor</title>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
   <link rel="stylesheet" href="editor.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -46,6 +52,12 @@
         </svg>
         <span>Copy</span>
       </button>
+      <select id="editor-format-select" class="action-select" title="Select Image Format">
+        <option value="png">.PNG</option>
+        <option value="jpg">.JPG</option>
+        <option value="webp">.WEBP</option>
+        <option value="gif">.GIF</option>
+      </select>
       <button id="btn-save" class="action-btn success" title="Save to File (Ctrl+S)">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
