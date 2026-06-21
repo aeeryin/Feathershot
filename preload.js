@@ -16,7 +16,6 @@ contextBridge.exposeInMainWorld('api', {
   onHideMagnifier: (callback) => ipcRenderer.on('hide-magnifier', () => callback()),
   sendCropperEvent: (data) => ipcRenderer.send('cropper-event', data),
   onCropperSync: (callback) => ipcRenderer.on('cropper-sync', (event, data) => callback(data)),
-  sendCropperReady: () => ipcRenderer.send('cropper-ready'),
 
   // Editor specific APIs
   onOpenImage: (callback) => ipcRenderer.on('open-image', (event, dataUrl, lang) => callback(dataUrl, lang)),

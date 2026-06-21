@@ -538,7 +538,7 @@ function createCropperWindows(validScreenshots) {
       alwaysOnTop: true,
       fullscreen: false,
       resizable: false,
-      show: false, // Start hidden to prevent click-through before ready
+      show: true, // Show immediately to avoid Chromium paint throttling on hidden windows
       focusable: true,
       skipTaskbar: true,
       webPreferences: {
@@ -568,6 +568,10 @@ function createCropperWindows(validScreenshots) {
           totalSize: { width: totalWidth, height: totalHeight },
           theme: settings.theme
         }, getResolvedLanguage());
+        
+        // Explicitly focus and show to ensure foreground focus
+        win.show();
+        win.focus();
       }
     });
     
@@ -920,14 +924,6 @@ ipcMain.on('cancel-crop', () => {
   
   restoreEditorAfterCrop = false;
   restoreSettingsAfterCrop = false;
-});
-
-ipcMain.on('cropper-ready', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  if (win && !win.isDestroyed()) {
-    win.show();
-    win.focus();
-  }
 });
 
 ipcMain.on('report-mouse-active', (event) => {

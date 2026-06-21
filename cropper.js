@@ -113,7 +113,6 @@ window.api.onCaptureImage((data, lang) => {
         compositeReady = true;
         resizeCanvas();
         draw();
-        window.api.sendCropperReady();
       }
     };
     img.onerror = () => {
@@ -122,7 +121,6 @@ window.api.onCaptureImage((data, lang) => {
         compositeReady = true;
         resizeCanvas();
         draw();
-        window.api.sendCropperReady();
       }
     };
     img.src = capture.url;
