@@ -46,127 +46,154 @@
       </div>
     </div>
 
-    <!-- Option Card 1: Capture Action -->
-    <div class="setting-card">
-      <div class="card-title" id="card-default-action-title">Default Action</div>
-      <div class="card-desc" id="card-default-action-desc">Choose what happens right after you select and crop a screen area.</div>
-      <div class="radio-group">
-        <label class="radio-label">
-          <input type="radio" name="default-action" value="editor" checked>
-          <span class="radio-custom"></span>
-          <div class="radio-text">
-            <strong id="action-editor-title">Open in Editor</strong>
-            <span id="action-editor-desc">Add annotations, text, blur, and markup inside the visual editor.</span>
+    <!-- 2 Column Layout Grid -->
+    <div class="settings-grid-layout">
+      <!-- Left Column -->
+      <div class="settings-column">
+        <!-- Option Card 1: Capture Action -->
+        <div class="setting-card">
+          <div class="card-title" id="card-default-action-title">Default Action</div>
+          <div class="card-desc" id="card-default-action-desc">Choose what happens right after you select and crop a screen area.</div>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="default-action" value="editor" checked>
+              <span class="radio-custom"></span>
+              <div class="radio-text">
+                <strong id="action-editor-title">Open in Editor</strong>
+                <span id="action-editor-desc">Add annotations, text, blur, and markup inside the visual editor.</span>
+              </div>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="default-action" value="clipboard">
+              <span class="radio-custom"></span>
+              <div class="radio-text">
+                <strong id="action-clipboard-title">Copy directly to Clipboard</strong>
+                <span id="action-clipboard-desc">Skip the editor and copy the crop directly to your clipboard.</span>
+              </div>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="default-action" value="save">
+              <span class="radio-custom"></span>
+              <div class="radio-text">
+                <strong id="action-save-title">Save directly to folder</strong>
+                <span id="action-save-desc">Automatically save the file without prompt to your destination.</span>
+              </div>
+            </label>
           </div>
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="default-action" value="clipboard">
-          <span class="radio-custom"></span>
-          <div class="radio-text">
-            <strong id="action-clipboard-title">Copy directly to Clipboard</strong>
-            <span id="action-clipboard-desc">Skip the editor and copy the crop directly to your clipboard.</span>
-          </div>
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="default-action" value="save">
-          <span class="radio-custom"></span>
-          <div class="radio-text">
-            <strong id="action-save-title">Save directly to folder</strong>
-            <span id="action-save-desc">Automatically save the file without prompt to your destination.</span>
-          </div>
-        </label>
-      </div>
-    </div>
+        </div>
 
-    <!-- Option Card: Language -->
-    <div class="setting-card">
-      <div class="card-title" id="card-language-title">Language</div>
-      <div class="card-desc" id="card-language-desc">Select the display language for the application.</div>
-      <div class="setting-field">
-        <select id="language-select" style="width: 100%; padding: 10px; background: #1a1a1e; border: 1px solid #2f2f37; border-radius: 6px; color: var(--text-primary); font-family: inherit; font-size: 13px;">
-          <option value="auto" id="language-auto">Auto (System Language)</option>
-          <option value="en" id="language-en">English</option>
-          <option value="pt" id="language-pt">Português</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Option Card 2: Hotkeys -->
-    <div class="setting-card">
-      <div class="card-title" id="card-hotkey-title">Keyboard Hotkey</div>
-      <div class="card-desc" id="card-hotkey-desc">Shortcut key to trigger region screen captures.</div>
-      <div class="input-row">
-        <input type="text" id="hotkey-input" placeholder="Press a hotkey..." readonly>
-        <button id="btn-record-hotkey" class="secondary-btn">Change Hotkey</button>
-        <button id="btn-set-printscreen" class="secondary-btn printscreen-btn" title="Use Print Screen key">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          PrtSc
-        </button>
-      </div>
-      <span class="input-hint" id="hotkey-hint">Click "Change Hotkey" to record a combo, or use the PrtSc button to set Print Screen directly.</span>
-    </div>
-
-    <!-- Option Card 3: Editor Behavior -->
-    <div class="setting-card">
-      <div class="card-title" id="card-editor-behavior-title">Editor Behavior</div>
-      <div class="card-desc" id="card-editor-behavior-desc">Configure how the image editor opens after capture.</div>
-      <div class="toggle-row">
-        <label class="toggle-label" for="toggle-maximized">
-          <div class="toggle-text">
-            <strong id="toggle-maximized-title">Always open editor maximized</strong>
-            <span id="toggle-maximized-desc">The editor window will always open in fullscreen mode, regardless of the image size.</span>
+        <!-- Option Card 4: Destination & Naming -->
+        <div class="setting-card">
+          <div class="card-title" id="card-storage-title">Storage & Naming</div>
+          <div class="card-desc" id="card-storage-desc">Setup where screenshots are saved and how files are named.</div>
+          
+          <div class="setting-field">
+            <label class="field-label" id="label-save-folder">Save Folder Path</label>
+            <div class="input-row">
+              <input type="text" id="folder-input" readonly>
+              <button id="btn-browse-folder" class="secondary-btn">Browse</button>
+            </div>
           </div>
-          <div class="toggle-switch">
-            <input type="checkbox" id="toggle-maximized">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
-      </div>
-    </div>
 
-    <!-- Option Card: Start with system -->
-    <div class="setting-card">
-      <div class="card-title" id="card-startup-title">Startup</div>
-      <div class="card-desc" id="card-startup-desc">Control whether the application launches automatically when you sign in.</div>
-      <div class="toggle-row">
-        <label class="toggle-label" for="toggle-startup">
-          <div class="toggle-text">
-            <strong id="toggle-startup-title">Start with system</strong>
-            <span id="toggle-startup-desc">Feathershot will run in the system tray automatically when you sign in.</span>
+          <div class="setting-field-row">
+            <div class="setting-field" style="flex: 2;">
+              <label class="field-label" id="label-naming-template">File Naming Template</label>
+              <input type="text" id="filename-pattern" placeholder="Screenshot_{yyyy}-{month}-{day}">
+              <span class="input-hint" id="naming-hint">Supported tokens: {yyyy}, {month}, {day}, {hour}, {min}, {sec}</span>
+            </div>
+            <div class="setting-field" style="flex: 1;">
+              <label class="field-label" id="label-format">Format</label>
+              <select id="format-select">
+                <option value="png" id="format-png">PNG (Lossless)</option>
+                <option value="jpeg" id="format-jpeg">JPEG (Compressed)</option>
+              </select>
+            </div>
           </div>
-          <div class="toggle-switch">
-            <input type="checkbox" id="toggle-startup">
-            <span class="toggle-slider"></span>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <!-- Option Card 4: Destination & Naming -->
-    <div class="setting-card">
-      <div class="card-title" id="card-storage-title">Storage & Naming</div>
-      <div class="card-desc" id="card-storage-desc">Setup where screenshots are saved and how files are named.</div>
-      
-      <div class="setting-field">
-        <label class="field-label" id="label-save-folder">Save Folder Path</label>
-        <div class="input-row">
-          <input type="text" id="folder-input" readonly>
-          <button id="btn-browse-folder" class="secondary-btn">Browse</button>
         </div>
       </div>
 
-      <div class="setting-field-row">
-        <div class="setting-field" style="flex: 2;">
-          <label class="field-label" id="label-naming-template">File Naming Template</label>
-          <input type="text" id="filename-pattern" placeholder="Screenshot_{yyyy}-{month}-{day}">
-          <span class="input-hint" id="naming-hint">Supported tokens: {yyyy}, {month}, {day}, {hour}, {min}, {sec}</span>
+      <!-- Right Column -->
+      <div class="settings-column">
+        <!-- Option Card 2: Hotkeys -->
+        <div class="setting-card">
+          <div class="card-title" id="card-hotkey-title">Keyboard Hotkey</div>
+          <div class="card-desc" id="card-hotkey-desc">Shortcut key to trigger region screen captures.</div>
+          <div class="input-row">
+            <input type="text" id="hotkey-input" placeholder="Press a hotkey..." readonly>
+            <button id="btn-record-hotkey" class="secondary-btn">Change Hotkey</button>
+            <button id="btn-set-printscreen" class="secondary-btn printscreen-btn" title="Use Print Screen key">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              PrtSc
+            </button>
+          </div>
+          <span class="input-hint" id="hotkey-hint">Click "Change Hotkey" to record a combo, or use the PrtSc button to set Print Screen directly.</span>
         </div>
-        <div class="setting-field" style="flex: 1;">
-          <label class="field-label" id="label-format">Format</label>
-          <select id="format-select">
-            <option value="png" id="format-png">PNG (Lossless)</option>
-            <option value="jpeg" id="format-jpeg">JPEG (Compressed)</option>
-          </select>
+
+        <!-- Option Card: Language -->
+        <div class="setting-card">
+          <div class="card-title" id="card-language-title">Language</div>
+          <div class="card-desc" id="card-language-desc">Select the display language for the application.</div>
+          <div class="setting-field">
+            <select id="language-select">
+              <option value="auto" id="language-auto">Auto (System Language)</option>
+              <option value="en" id="language-en">English</option>
+              <option value="pt" id="language-pt">Português</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Option Card 3: Editor Behavior -->
+        <div class="setting-card">
+          <div class="card-title" id="card-editor-behavior-title">Editor Behavior</div>
+          <div class="card-desc" id="card-editor-behavior-desc">Configure how the image editor opens after capture.</div>
+          <div class="toggle-row">
+            <label class="toggle-label" for="toggle-maximized">
+              <div class="toggle-text">
+                <strong id="toggle-maximized-title">Always open editor maximized</strong>
+                <span id="toggle-maximized-desc">The editor window will always open in fullscreen mode, regardless of the image size.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="toggle-maximized">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Option Card: Start with system -->
+        <div class="setting-card">
+          <div class="card-title" id="card-startup-title">Startup</div>
+          <div class="card-desc" id="card-startup-desc">Control whether the application launches automatically when you sign in.</div>
+          <div class="toggle-row">
+            <label class="toggle-label" for="toggle-startup">
+              <div class="toggle-text">
+                <strong id="toggle-startup-title">Start with system</strong>
+                <span id="toggle-startup-desc">Feathershot will run in the system tray automatically when you sign in.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="toggle-startup">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Option Card: Theme -->
+        <div class="setting-card">
+          <div class="card-title" id="card-theme-title">Theme</div>
+          <div class="card-desc" id="card-theme-desc">Select the theme for the application interface.</div>
+          <div class="toggle-row">
+            <label class="toggle-label" for="toggle-theme">
+              <div class="toggle-text">
+                <strong id="toggle-theme-title">Light Mode</strong>
+                <span id="toggle-theme-desc">Toggle between Dark and Light mode.</span>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="toggle-theme">
+                <span class="toggle-slider"></span>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
     </div>

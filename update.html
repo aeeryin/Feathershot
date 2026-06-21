@@ -460,8 +460,9 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    // Listen for update events from main process
-    window.api.onUpdateProgress((event, data) => {
+    function handleUpdateData(data) {
+      if (!data) return;
+
       if (data.lang) {
         currentLang = data.lang;
         // Apply initial labels
@@ -476,9 +477,9 @@
         btnLater.textContent = t['btn-later'];
       }
 
-      if (data.type === 'version') {
+      if (data.type === 'version' || data.version) {
         versionTag.style.display = 'inline-flex';
-        versionText.textContent = 'v' + data.version;
+        versionText.textContent = 'v' + (data.version || data.type);
       }
 
       if (data.type === 'progress') {
@@ -500,7 +501,7 @@
         }
       }
 
-      if (data.type === 'complete') {
+      if (data.type === 'complete' || data.type === 'downloaded') {
         const t = updateTranslations[currentLang] || updateTranslations.en;
         container.classList.add('complete');
         progressFill.style.width = '100%';
@@ -511,7 +512,11 @@
         btnRestart.style.display = 'block';
         btnLater.style.display = 'block';
       }
-    });
+    }
+
+    // Listen for update events from main process
+    window.api.onUpdateProgress((event, data) => handleUpdateData(data));
+    window.api.onUpdateStatus((data) => handleUpdateData(data));
 
     btnRestart.addEventListener('click', () => {
       window.api.sendUpdateAction('restart');

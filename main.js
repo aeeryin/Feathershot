@@ -19,7 +19,8 @@ const DEFAULT_SETTINGS = {
   fileNamePattern: 'Screenshot_{yyyy}-{mm}-{dd}_{hh}-{mm}-{ss}',
   alwaysMaximized: false,
   startAtLogin: false,
-  language: 'auto' // 'auto' | 'en' | 'pt'
+  language: 'auto', // 'auto' | 'en' | 'pt'
+  theme: 'dark' // 'dark' | 'light'
 };
 
 let settings = { ...DEFAULT_SETTINGS };
@@ -206,10 +207,9 @@ function getActiveDisplay() {
 // Capture screen using PowerShell (native Windows GDI, avoids Electron GPU issues)
 function captureScreenViaPowerShell(activeDisplay) {
   return new Promise((resolve, reject) => {
-    const tmpFile = path.join(os.tmpdir(), `feathershot_${Date.now()}.png`);
-    const escapedPath = tmpFile.replace(/\\/g, '\\\\');
-
     if (!activeDisplay) activeDisplay = getActiveDisplay();
+    const tmpFile = path.join(os.tmpdir(), `feathershot_${activeDisplay.id}_${Date.now()}.png`);
+    const escapedPath = tmpFile.replace(/\\/g, '\\\\');
     const { x, y, width, height } = activeDisplay.bounds;
 
     const script = `Add-Type -AssemblyName System.Drawing,System.Windows.Forms; $b=New-Object System.Drawing.Bitmap(${width},${height}); $g=[System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen(${x},${y},0,0,New-Object System.Drawing.Size(${width},${height})); $b.Save('${escapedPath}',[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $b.Dispose();`;
@@ -392,7 +392,8 @@ async function triggerScreenCapture() {
     if (wasEditorVisible) editorWindow.show();
     if (wasSettingsVisible) settingsWindow.show();
     
-    cropperWindows = validScreenshots.map(({ display, url }) => createCropperWindowForDisplay(display, url));
+    // Cria uma janela por monitor com dados compostos para suporte a drag entre monitores
+    cropperWindows = createCropperWindows(validScreenshots);
   } catch (err) {
     console.error('Failed to trigger capture:', err);
     dialog.showErrorBox('Feathershot - Erro na Captura', `Não foi possível capturar a tela.\n\n${err.message}`);
@@ -428,41 +429,79 @@ function handleScreenshotResult(dataUrl, width, height) {
   }
 }
 
-// Cropper Window creation for a specific display
-function createCropperWindowForDisplay(display, screenshotDataUrl) {
-  const { x, y, width, height } = display.bounds;
+// Create one cropper window per monitor with shared composite data for cross-monitor selection
+function createCropperWindows(validScreenshots) {
+  const displays = screen.getAllDisplays();
   
-  const win = new BrowserWindow({
-    x,
-    y,
-    width,
-    height,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    fullscreen: true,
-    resizable: false,
-    enableLargerThanScreen: true,
-    skipTaskbar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      devTools: false
-    }
+  // Calculate bounding box of all displays (virtual desktop)
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+  
+  displays.forEach(d => {
+    minX = Math.min(minX, d.bounds.x);
+    minY = Math.min(minY, d.bounds.y);
+    maxX = Math.max(maxX, d.bounds.x + d.bounds.width);
+    maxY = Math.max(maxY, d.bounds.y + d.bounds.height);
   });
   
-  const contents = win.webContents;
-
-  win.loadFile('cropper.html');
+  const totalWidth = maxX - minX;
+  const totalHeight = maxY - minY;
   
-  contents.on('did-finish-load', () => {
-    if (!contents.isDestroyed()) {
-      contents.send('capture-image', screenshotDataUrl, getResolvedLanguage());
-    }
+  // All display captures with global offsets (for composite building)
+  const displayCaptures = validScreenshots.map(({ display, url }) => ({
+    x: display.bounds.x - minX,
+    y: display.bounds.y - minY,
+    width: display.bounds.width,
+    height: display.bounds.height,
+    url
+  }));
+  
+  const windows = [];
+  
+  validScreenshots.forEach(({ display, url }) => {
+    const win = new BrowserWindow({
+      x: display.bounds.x,
+      y: display.bounds.y,
+      width: display.bounds.width,
+      height: display.bounds.height,
+      frame: false,
+      transparent: true,
+      alwaysOnTop: true,
+      fullscreen: false,
+      resizable: false,
+      skipTaskbar: true,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+        devTools: false
+      }
+    });
+    
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.loadFile('cropper.html');
+    
+    // This window's offset within the virtual desktop
+    const displayOffset = {
+      x: display.bounds.x - minX,
+      y: display.bounds.y - minY
+    };
+    
+    win.webContents.on('did-finish-load', () => {
+      if (!win.webContents.isDestroyed()) {
+        win.webContents.send('capture-image', {
+          displayCaptures,
+          displayOffset,
+          displaySize: { width: display.bounds.width, height: display.bounds.height },
+          totalSize: { width: totalWidth, height: totalHeight }
+        }, getResolvedLanguage());
+      }
+    });
+    
+    windows.push(win);
   });
   
-  return win;
+  return windows;
 }
 
 // Close all active croppers
@@ -556,8 +595,8 @@ function openSettingsWindow() {
   const icon = nativeImage.createFromPath(APP_ICON_PATH);
 
   settingsWindow = new BrowserWindow({
-    width: 550,
-    height: 700,
+    width: 900,
+    height: 530,
     resizable: false,
     icon: icon,
     frame: false, // Frameless for a premium styled view
@@ -620,6 +659,12 @@ function openUpdateWindow() {
 
   updateWindow.once('ready-to-show', () => {
     updateWindow.show();
+    // Dispara o download automático se estiver empacotado em produção
+    if (app.isPackaged) {
+      autoUpdater.downloadUpdate().catch(err => {
+        console.error('Failed to download update on window open:', err);
+      });
+    }
   });
 
   updateWindow.on('closed', () => {
@@ -657,6 +702,7 @@ function setupAutoUpdater() {
   autoUpdater.on('update-available', (info) => {
     console.log('Update available:', info.version);
     updateVersion = info.version;
+    openUpdateWindow(); // Abre a janela de atualização automaticamente!
     broadcastUpdateEvent('update-status', {
       type: 'available',
       version: info.version
@@ -771,6 +817,26 @@ ipcMain.on('crop-completed', (event, croppedDataUrl, width, height) => {
 
 ipcMain.on('cancel-crop', () => {
   closeAllCroppers();
+});
+
+ipcMain.on('report-mouse-active', (event) => {
+  const activeWin = BrowserWindow.fromWebContents(event.sender);
+  if (!activeWin) return;
+  
+  cropperWindows.forEach(win => {
+    if (win && !win.isDestroyed() && win !== activeWin) {
+      win.webContents.send('hide-magnifier');
+    }
+  });
+});
+
+// Sync drag events between cropper windows for cross-monitor selection
+ipcMain.on('cropper-event', (event, data) => {
+  cropperWindows.forEach(win => {
+    if (win && !win.isDestroyed() && win.webContents !== event.sender) {
+      win.webContents.send('cropper-sync', data);
+    }
+  });
 });
 
 ipcMain.on('close-editor', () => {

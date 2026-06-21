@@ -12,6 +12,7 @@ const formatSelect = document.getElementById('format-select');
 const languageSelect = document.getElementById('language-select');
 const btnSave = document.getElementById('btn-save-settings');
 const btnCancel = document.getElementById('btn-cancel-settings');
+const toggleTheme = document.getElementById('toggle-theme');
 
 // Update banner elements
 const updateBanner = document.getElementById('update-banner');
@@ -63,6 +64,10 @@ const settingsTranslations = {
     'label-format': 'Format',
     'format-png': 'PNG (Lossless)',
     'format-jpeg': 'JPEG (Compressed)',
+    'card-theme-title': 'Interface Theme',
+    'card-theme-desc': 'Select the appearance theme for the application.',
+    'toggle-theme-title': 'Light Mode',
+    'toggle-theme-desc': 'Toggle between Dark and Light interface themes.',
     'btn-save-settings': 'Save Configurations',
     'btn-cancel-settings': 'Cancel'
   },
@@ -103,6 +108,10 @@ const settingsTranslations = {
     'label-format': 'Formato',
     'format-png': 'PNG (Sem Perdas)',
     'format-jpeg': 'JPEG (Compactado)',
+    'card-theme-title': 'Tema da Interface',
+    'card-theme-desc': 'Selecione o tema de aparência para o aplicativo.',
+    'toggle-theme-title': 'Modo Claro',
+    'toggle-theme-desc': 'Alternar entre os temas de interface Escuro e Claro.',
     'btn-save-settings': 'Salvar Configurações',
     'btn-cancel-settings': 'Cancelar'
   }
@@ -168,6 +177,10 @@ async function initSettings() {
       startupDesc.textContent = t['toggle-startup-unsupported-desc'];
     }
   }
+  
+  // Populate theme toggle
+  toggleTheme.checked = currentSettings.theme === 'light';
+  document.documentElement.setAttribute('data-theme', currentSettings.theme || 'dark');
 
   // Show update banner if an update is already known
   if (currentSettings.updateVersion) {
@@ -297,11 +310,18 @@ btnSave.addEventListener('click', async () => {
     imageFormat: formatSelect.value,
     alwaysMaximized: toggleMaximized.checked,
     startAtLogin: toggleStartup.checked,
-    language: languageSelect.value
+    language: languageSelect.value,
+    theme: toggleTheme.checked ? 'light' : 'dark'
   };
   
   await window.api.saveSettings(newSettings);
   window.api.closeWindow();
+});
+
+// Real-time Theme Toggle Listener
+toggleTheme.addEventListener('change', () => {
+  const theme = toggleTheme.checked ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
 });
 
 // Change Language Listener

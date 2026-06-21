@@ -481,3 +481,51 @@ input:checked + .toggle-slider:before {
 /* Modal Dialog overlay */
 /* No resize functionality available */
 
+/* Light Theme variables override */
+[data-theme="light"] {
+  --bg-main: #f5f5f7;
+  --bg-sidebar: #eaeaea;
+  --bg-workspace: #e5e5ea;
+  --bg-titlebar: #eaeaea;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+  --accent-color: #13BE9E;
+}
+
+[data-theme="light"] .action-btn {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .action-btn:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .tool-btn {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .tool-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .tool-btn.active {
+  background-color: rgba(19, 190, 158, 0.15);
+  border-color: rgba(19, 190, 158, 0.3);
+  color: #0fa386;
+}
+
+[data-theme="light"] .tool-btn.active svg {
+  color: #0fa386;
+}
+
+[data-theme="light"] .win-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] #canvas-textarea {
+  color: #1d1d1f;
+}
+

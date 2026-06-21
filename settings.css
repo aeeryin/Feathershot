@@ -609,3 +609,72 @@ input[type="text"].recording {
   background: rgba(52, 199, 89, 0.15);
   color: #34c759;
 }
+
+/* Layout Responsivo de duas colunas para o settings expandido */
+.settings-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.settings-column {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Adicionamos a propriedade background var para o select que agora não tem style inline */
+select {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Light Theme overrides */
+[data-theme="light"] {
+  --bg-main: #f5f5f7;
+  --bg-card: #ffffff;
+  --bg-titlebar: #eaeaea;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --text-primary: #1d1d1f;
+  --text-secondary: #86868b;
+}
+
+[data-theme="light"] select,
+[data-theme="light"] input[type="text"] {
+  background-color: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] select:focus,
+[data-theme="light"] input[type="text"]:focus {
+  border-color: var(--accent-color);
+}
+
+[data-theme="light"] .toggle-slider {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .toggle-slider::before {
+  background-color: #86868b;
+}
+
+[data-theme="light"] .toggle-switch input:checked + .toggle-slider::before {
+  background-color: white;
+}
+
+[data-theme="light"] .secondary-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .win-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}

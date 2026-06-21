@@ -1432,3 +1432,24 @@ workspace.addEventListener('drop', (e) => {
     }
   }
 });
+
+// Initialize and apply theme settings dynamically
+async function initTheme() {
+  try {
+    const currentSettings = await window.api.getSettings();
+    document.documentElement.setAttribute('data-theme', currentSettings.theme || 'dark');
+  } catch (err) {
+    console.error('Failed to load theme settings in editor:', err);
+  }
+}
+
+initTheme();
+
+// Listen for dynamic settings changes
+if (window.api.onSettingsChanged) {
+  window.api.onSettingsChanged((newSettings) => {
+    if (newSettings && newSettings.theme) {
+      document.documentElement.setAttribute('data-theme', newSettings.theme);
+    }
+  });
+}
