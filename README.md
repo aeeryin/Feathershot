@@ -54,8 +54,8 @@ macOS builds should be produced on macOS. Linux builds are produced in CI on Ubu
 3. Create and push a tag:
 
 ```bash
-git tag v1.2.2
-git push origin v1.2.2
+git tag v1.2.3
+git push origin v1.2.3
 ```
 
 The GitHub Actions workflow builds Windows, macOS, and Linux packages and publishes them to the matching GitHub Release.

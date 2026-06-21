@@ -1,6 +1,6 @@
 {
   "name": "feathershot",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Premium, feature-rich cross-platform screenshot tool inspired by Greenshot",
   "main": "main.js",
   "scripts": {
