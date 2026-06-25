@@ -34,20 +34,20 @@ jobs:
       - name: Build
         run: cmake --build build
 
+      - name: Deploy Qt DLLs
+        run: "${{ env.Qt6_ROOT_DIR }}/bin/windeployqt.exe" build/Feathershot.exe --release --no-translations --no-opengl-sw
+
       - name: Create release archive
         shell: pwsh
         run: |
           $distDir = "dist/Feathershot-1.2.6-windows-x64"
           New-Item -ItemType Directory -Force -Path $distDir | Out-Null
           Copy-Item "build/Feathershot.exe" $distDir
-          $qtBin = "${{ env.Qt6_ROOT_DIR }}/bin"
-          $dlls = @("Qt6Core.dll","Qt6Gui.dll","Qt6Widgets.dll","Qt6Network.dll","Qt6Svg.dll","Qt6SvgWidgets.dll","Qt6PrintSupport.dll","Qt6OpenGL.dll","Qt6OpenGLWidgets.dll")
-          foreach ($dll in $dlls) {
-              $src = Join-Path $qtBin $dll
-              if (Test-Path $src) { Copy-Item $src $distDir }
-          }
-          New-Item -ItemType Directory -Force -Path "$distDir/platforms" | Out-Null
-          Copy-Item "$qtBin/../plugins/platforms/qwindows.dll" "$distDir/platforms/" -ErrorAction SilentlyContinue
+          Copy-Item "build/*.dll" $distDir -ErrorAction SilentlyContinue
+          if (Test-Path "build/platforms") { Copy-Item -Recurse "build/platforms" $distDir }
+          if (Test-Path "build/styles") { Copy-Item -Recurse "build/styles" $distDir }
+          if (Test-Path "build/imageformats") { Copy-Item -Recurse "build/imageformats" $distDir }
+          if (Test-Path "build/tls") { Copy-Item -Recurse "build/tls" $distDir }
           Compress-Archive -Path $distDir -DestinationPath "Feathershot-1.2.6-windows-x64.zip"
 
       - uses: actions/upload-artifact@v4
