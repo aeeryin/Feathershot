@@ -26,3 +26,5 @@ Thumbs.db
 node_modules/
 aqtinstall.log
 dist/
+
+# v1.2.6
