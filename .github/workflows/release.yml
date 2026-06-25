@@ -23,6 +23,11 @@ jobs:
           target: 'desktop'
           arch: 'win64_msvc2019_64'
 
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_ROOT_DIR }}"
 
@@ -88,7 +93,7 @@ jobs:
           version: '6.6.3'
           host: 'mac'
           target: 'desktop'
-          arch: 'macos'
+          arch: 'clang_64'
 
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_ROOT_DIR }}"
