@@ -24,25 +24,25 @@ jobs:
           arch: 'win64_msvc2019_64'
 
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_ROOT_DIR }}"
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
       - name: Create release archive
         shell: pwsh
         run: |
-          $buildDir = "build/Release"
           $distDir = "dist/Feathershot-1.2.6-windows-x64"
           New-Item -ItemType Directory -Force -Path $distDir | Out-Null
-          
-          # Copy exe and DLLs
-          Copy-Item "$buildDir/Feathershot.exe" $distDir
-          Copy-Item "$buildDir/*.dll" $distDir -ErrorAction SilentlyContinue
+          Copy-Item "build/Feathershot.exe" $distDir
+          $qtBin = "${{ env.Qt6_ROOT_DIR }}/bin"
+          $dlls = @("Qt6Core.dll","Qt6Gui.dll","Qt6Widgets.dll","Qt6Network.dll","Qt6Svg.dll","Qt6SvgWidgets.dll","Qt6PrintSupport.dll","Qt6OpenGL.dll","Qt6OpenGLWidgets.dll")
+          foreach ($dll in $dlls) {
+              $src = Join-Path $qtBin $dll
+              if (Test-Path $src) { Copy-Item $src $distDir }
+          }
           New-Item -ItemType Directory -Force -Path "$distDir/platforms" | Out-Null
-          Copy-Item "$buildDir/platforms/*.dll" "$distDir/platforms/" -ErrorAction SilentlyContinue
-          
-          # Create zip
+          Copy-Item "$qtBin/../plugins/platforms/qwindows.dll" "$distDir/platforms/" -ErrorAction SilentlyContinue
           Compress-Archive -Path $distDir -DestinationPath "Feathershot-1.2.6-windows-x64.zip"
 
       - uses: actions/upload-artifact@v4
@@ -58,13 +58,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y qt6-base-dev libqt6svg6-dev libqt6network6 qt6-tools-dev qt6-tools-dev-tools libgl1-mesa-dev
+          sudo apt-get install -y qt6-base-dev libqt6svg6-dev libqt6network6 qt6-tools-dev qt6-tools-dev-tools libgl1-mesa-dev ninja-build
 
       - name: Configure
-        run: cmake -B build -DCMAKE_PREFIX_PATH="/usr/lib/x86_64-linux-gnu/cmake/Qt6"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="/usr/lib/x86_64-linux-gnu/cmake/Qt6"
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
       - name: Create release archive
         run: |
@@ -91,10 +91,10 @@ jobs:
           arch: 'macos'
 
       - name: Configure
-        run: cmake -B build -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="${{ env.Qt6_ROOT_DIR }}"
 
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build
 
       - name: Create release archive
         run: |
