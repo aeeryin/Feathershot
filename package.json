@@ -1,0 +1,130 @@
+{
+  "name": "feathershot",
+  "version": "1.2.6",
+  "description": "Premium, feature-rich cross-platform screenshot tool inspired by Greenshot",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "build": "electron-builder --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:linux": "electron-builder --linux --publish never",
+    "publish": "electron-builder --publish always",
+    "publish:win": "electron-builder --win --publish always",
+    "publish:mac": "electron-builder --mac --publish always",
+    "publish:linux": "electron-builder --linux --publish always"
+  },
+  "keywords": [
+    "screenshot",
+    "greenshot",
+    "windows",
+    "macos",
+    "linux",
+    "cross-platform",
+    "electron"
+  ],
+  "author": {
+    "name": "Aeeryin",
+    "email": "artisticamente.official@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aeeryin/Feathershot.git"
+  },
+  "license": "MIT",
+  "build": {
+    "appId": "com.feathershot.app",
+    "productName": "Feathershot",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "aeeryin",
+        "repo": "Feathershot",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/icons/main.png",
+      "artifactName": "Feathershot-${version}-windows.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "src/assets/icons/main.png",
+      "identity": null,
+      "artifactName": "Feathershot-${version}-macos.${ext}"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/icons/main.png",
+      "category": "Utility",
+      "maintainer": "Aeeryin <aeeryin@gmail.com>",
+      "artifactName": "Feathershot-${version}-linux.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "artifactName": "Feathershot-${version}-windows.${ext}",
+      "shortcutName": "Feathershot"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache/**",
+      "!dist/**",
+      "!out/**",
+      "!release/**",
+      "!build/**",
+      "!.github/**",
+      "!.git/**",
+      "!website/**",
+      "!*.log"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9",
+    "gifenc": "^1.0.3",
+    "jspdf": "^4.2.1"
+  },
+  "devDependencies": {
+    "electron": "^31.1.0",
+    "electron-builder": "^24.13.3"
+  }
+}

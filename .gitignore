@@ -1,30 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+release/
 build/
-cmake-build-*/
-*.user
-*.suo
-*.sln
-*.vcxproj
-*.vcxproj.filters
-.qmake.stash
-Makefile
-*.o
-*.obj
-*.dll
-*.so
-*.dylib
-*.exe
-*.app
-*.dmg
-*.deb
-*.rpm
-*.AppImage
-.DS_Store
+
+# OS files
 Thumbs.db
-.cache/
+.DS_Store
+Desktop.ini
+
+# Editor files
 .vscode/
 .idea/
-node_modules/
-aqtinstall.log
-dist/
+*.swp
+*.swo
+*~
 
-# v1.2.6
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Electron builder cache
+.electron-builder-cache/

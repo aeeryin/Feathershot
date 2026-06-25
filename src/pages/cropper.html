@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feathershot Cropper</title>
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="../styles/cropper.css">
+</head>
+
+<body>
+  <div id="cropper-container">
+    <canvas id="view-canvas"></canvas>
+    <div id="magnifier">
+      <canvas id="mag-canvas"></canvas>
+      <div id="mag-crosshair"></div>
+      <div id="mag-text">0, 0</div>
+    </div>
+
+    <!-- Floating context quick action menu -->
+    <div id="quick-menu" style="display: none;">
+      <button class="menu-item" id="menu-editor">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" fill="currentColor" fill-opacity="0.25" />
+        </svg>
+        <span>Abrir no Editor</span>
+      </button>
+      <button class="menu-item" id="menu-clipboard">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" fill="currentColor" fill-opacity="0.25" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+        <span>Copiar para a Área de Transferência</span>
+      </button>
+      <button class="menu-item" id="menu-desktop">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" fill="currentColor" fill-opacity="0.25" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        <span>Salvar na Área de Trabalho</span>
+      </button>
+      <button class="menu-item" id="menu-print">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" fill="currentColor" fill-opacity="0.25" />
+        </svg>
+        <span>Imprimir</span>
+      </button>
+    </div>
+
+    <div id="hint-overlay">
+      <span>Drag to crop | Esc to cancel</span>
+    </div>
+  </div>
+  <script src="../scripts/cropper.js"></script>
+</body>
+
+</html>
