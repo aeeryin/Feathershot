@@ -35,7 +35,7 @@ jobs:
         run: cmake --build build
 
       - name: Deploy Qt DLLs
-        run: "${{ env.Qt6_ROOT_DIR }}/bin/windeployqt.exe" build/Feathershot.exe --release --no-translations --no-opengl-sw
+        run: ${{ env.Qt6_ROOT_DIR }}/bin/windeployqt.exe build/Feathershot.exe --release --no-translations --no-opengl-sw
 
       - name: Create release archive
         shell: pwsh
